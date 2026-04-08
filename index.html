@@ -1,420 +1,1280 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ClaudeClaw — Personal AI Assistant</title>
-  <meta name="description" content="Personal AI assistant powered by Claude Code. Telegram bot with memory, scheduler, dashboard, and voice transcription.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #0a0a0f;
-      --bg2: #12121a;
-      --bg3: #1a1a28;
-      --text: #e4e4ec;
-      --text2: #9898ab;
-      --accent: #7c6ef0;
-      --accent2: #9b8ffa;
-      --green: #4ade80;
-      --border: #2a2a3a;
-      --radius: 16px;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Inter', -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      overflow-x: hidden;
-    }
-    a { color: var(--accent2); text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    code, .mono { font-family: 'JetBrains Mono', monospace; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClaudeClaw — Your Personal AI Assistant</title>
+<meta name="description" content="ClaudeClaw runs the real Claude Code CLI on your machine, controlled via Telegram. Persistent memory, cron scheduler, voice messages, and more.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,600&family=Source+Sans+3:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-    /* Nav */
-    nav {
-      position: fixed; top: 0; width: 100%; z-index: 100;
-      background: rgba(10,10,15,0.85); backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-      padding: 0 24px;
-    }
-    .nav-inner {
-      max-width: 1200px; margin: 0 auto;
-      display: flex; justify-content: space-between; align-items: center;
-      height: 60px;
-    }
-    .nav-logo { font-weight: 800; font-size: 18px; color: var(--accent); }
-    .nav-links { display: flex; gap: 24px; align-items: center; }
-    .nav-links a { color: var(--text2); font-size: 14px; font-weight: 500; }
-    .nav-links a:hover { color: var(--text); text-decoration: none; }
-    .lang-switch {
-      background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
-      padding: 4px 12px; color: var(--text2); font-size: 13px; cursor: pointer;
-    }
-    .lang-switch:hover { border-color: var(--accent); color: var(--text); }
+:root {
+  --bg-main: #FAF7F2;
+  --bg-warm: #F5F0E8;
+  --bg-card: #FFFFFF;
+  --accent: #D97757;
+  --accent-hover: #C4623F;
+  --accent-light: rgba(217, 119, 87, 0.08);
+  --text-primary: #1A1A1A;
+  --text-secondary: #555555;
+  --text-muted: #888888;
+  --border: rgba(0, 0, 0, 0.07);
+  --border-strong: rgba(0, 0, 0, 0.12);
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+  --shadow-hover: 0 4px 16px rgba(0,0,0,0.08);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --font-serif: 'Source Serif 4', Georgia, serif;
+  --font-sans: 'Source Sans 3', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --green: #2E7D32;
+  --red: #C62828;
+  --green-bg: rgba(46, 125, 50, 0.06);
+  --red-bg: rgba(198, 40, 40, 0.04);
+}
 
-    /* Hero */
-    .hero {
-      min-height: 100vh; display: flex; flex-direction: column;
-      justify-content: center; align-items: center; text-align: center;
-      padding: 120px 24px 80px;
-      background: radial-gradient(ellipse at 50% 0%, rgba(124,110,240,0.08) 0%, transparent 60%);
-    }
-    .hero-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: var(--bg3); border: 1px solid var(--border); border-radius: 100px;
-      padding: 6px 16px; font-size: 13px; color: var(--text2); margin-bottom: 32px;
-    }
-    .hero-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
-    .hero h1 {
-      font-size: clamp(40px, 8vw, 72px); font-weight: 800;
-      line-height: 1.1; margin-bottom: 24px;
-      background: linear-gradient(135deg, #fff 0%, var(--accent2) 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    }
-    .hero p { font-size: 20px; color: var(--text2); max-width: 640px; margin-bottom: 40px; }
-    .hero-actions { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
-    .btn {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 14px 28px; border-radius: 12px; font-weight: 600; font-size: 15px;
-      transition: all 0.2s;
-    }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-primary:hover { background: var(--accent2); text-decoration: none; transform: translateY(-1px); }
-    .btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
-    .btn-secondary:hover { border-color: var(--accent); text-decoration: none; }
+html { scroll-behavior: smooth; }
 
-    /* Terminal */
-    .terminal {
-      max-width: 680px; width: 100%; margin: 60px auto 0;
-      background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
-      overflow: hidden;
-    }
-    .terminal-bar {
-      display: flex; gap: 8px; padding: 12px 16px;
-      background: var(--bg3); border-bottom: 1px solid var(--border);
-    }
-    .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
-    .terminal-dot:nth-child(1) { background: #ff5f57; }
-    .terminal-dot:nth-child(2) { background: #febc2e; }
-    .terminal-dot:nth-child(3) { background: #28c840; }
-    .terminal-body { padding: 20px; font-size: 14px; line-height: 1.8; }
-    .terminal-body .prompt { color: var(--green); }
-    .terminal-body .cmd { color: var(--text); }
-    .terminal-body .out { color: var(--text2); }
+body {
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+  background: var(--bg-main);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
 
-    /* Features */
-    .section { max-width: 1200px; margin: 0 auto; padding: 100px 24px; }
-    .section-title {
-      font-size: 36px; font-weight: 800; margin-bottom: 16px; text-align: center;
-    }
-    .section-sub { color: var(--text2); text-align: center; max-width: 600px; margin: 0 auto 60px; font-size: 17px; }
-    .features-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;
-    }
-    .feature-card {
-      background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 32px;
-      transition: border-color 0.2s;
-    }
-    .feature-card:hover { border-color: var(--accent); }
-    .feature-icon { font-size: 28px; margin-bottom: 16px; }
-    .feature-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-    .feature-card p { color: var(--text2); font-size: 14px; line-height: 1.6; }
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
 
-    /* Architecture */
-    .arch-block {
-      background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 40px; overflow-x: auto;
-    }
-    .arch-block pre {
-      font-family: 'JetBrains Mono', monospace; font-size: 13px;
-      color: var(--text2); line-height: 1.8; white-space: pre;
-    }
+/* --- NAV --- */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(250, 247, 242, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
 
-    /* Commands */
-    .commands-table { width: 100%; border-collapse: collapse; }
-    .commands-table th, .commands-table td {
-      text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 14px;
-    }
-    .commands-table th { color: var(--text2); font-weight: 500; }
-    .commands-table code { background: var(--bg3); padding: 2px 8px; border-radius: 4px; font-size: 13px; }
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
 
-    /* CTA */
-    .cta {
-      text-align: center; padding: 80px 24px;
-      background: linear-gradient(180deg, transparent 0%, rgba(124,110,240,0.05) 100%);
-    }
-    .cta h2 { font-size: 32px; font-weight: 800; margin-bottom: 16px; }
-    .cta p { color: var(--text2); margin-bottom: 32px; }
+.nav-logo {
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
 
-    /* Footer */
-    footer {
-      text-align: center; padding: 40px 24px;
-      border-top: 1px solid var(--border); color: var(--text2); font-size: 13px;
-    }
-    footer a { color: var(--accent2); }
+.nav-logo span { color: var(--accent); }
 
-    /* Responsive */
-    @media (max-width: 768px) {
-      .hero h1 { font-size: 36px; }
-      .hero p { font-size: 16px; }
-      .features-grid { grid-template-columns: 1fr; }
-      .nav-links { gap: 12px; }
-    }
-  </style>
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  list-style: none;
+}
+
+.nav-links a {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--accent); }
+
+.lang-toggle {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 5px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lang-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--text-primary);
+  border-radius: 2px;
+  transition: all 0.3s;
+}
+
+.mobile-menu {
+  display: none;
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-main);
+  padding: 32px 24px;
+  z-index: 99;
+}
+
+.mobile-menu.open { display: flex; flex-direction: column; gap: 20px; }
+
+.mobile-menu a {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-decoration: none;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+/* --- HERO --- */
+.hero {
+  padding: 100px 0 80px;
+  text-align: center;
+}
+
+.hero-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-light);
+  border: 1px solid rgba(217, 119, 87, 0.15);
+  padding: 5px 14px;
+  border-radius: 20px;
+  margin-bottom: 28px;
+}
+
+.hero h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  max-width: 800px;
+  margin: 0 auto 24px;
+}
+
+.hero h1 em {
+  font-style: italic;
+  background: linear-gradient(135deg, var(--accent), #B85A3A);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle {
+  font-size: 1.15rem;
+  color: var(--text-secondary);
+  max-width: 560px;
+  margin: 0 auto 40px;
+  line-height: 1.7;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 64px;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  padding: 13px 28px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: transparent;
+  border: 1.5px solid var(--border-strong);
+  padding: 12px 28px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+
+.terminal {
+  max-width: 680px;
+  margin: 0 auto;
+  background: #1E1E1E;
+  border-radius: var(--radius);
+  overflow: hidden;
+  text-align: left;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+}
+
+.terminal-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px;
+  background: #2A2A2A;
+  border-bottom: 1px solid #333;
+}
+
+.terminal-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.terminal-dot.red { background: #FF5F57; }
+.terminal-dot.yellow { background: #FEBC2E; }
+.terminal-dot.green { background: #28C840; }
+
+.terminal-title {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #888;
+  margin-left: 8px;
+}
+
+.terminal-body {
+  padding: 20px;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.8;
+  color: #D4D4D4;
+  overflow-x: auto;
+}
+
+.terminal-body .prompt { color: var(--accent); }
+.terminal-body .success { color: #4EC9B0; }
+.terminal-body .info { color: #9CDCFE; }
+.terminal-body .dim { color: #666; }
+
+/* --- SECTIONS --- */
+section { padding: 96px 0; }
+
+.section-warm { background: var(--bg-warm); }
+
+.section-header {
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.section-header h2 {
+  font-family: var(--font-serif);
+  font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 14px;
+}
+
+.section-header p {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+/* --- WHY CARDS --- */
+.why-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.why-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 36px 28px;
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.why-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+.why-card-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--accent-light);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.why-card-icon svg { width: 24px; height: 24px; color: var(--accent); }
+
+.why-card h3 {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.why-card p { font-size: 0.95rem; color: var(--text-secondary); line-height: 1.65; }
+
+/* --- SECURITY COMPARISON --- */
+.comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.compare-card {
+  border-radius: var(--radius);
+  padding: 36px 32px;
+  border: 1.5px solid var(--border);
+}
+
+.compare-card.negative {
+  background: var(--red-bg);
+  border-color: rgba(198, 40, 40, 0.12);
+  opacity: 0.85;
+}
+
+.compare-card.positive {
+  background: var(--green-bg);
+  border-color: rgba(46, 125, 50, 0.18);
+  box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.06);
+}
+
+.compare-card h3 {
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.compare-card.negative h3 { color: var(--red); }
+.compare-card.positive h3 { color: var(--green); }
+
+.compare-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.compare-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.compare-list .marker {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-top: 1px;
+}
+
+.compare-card.negative .marker {
+  background: rgba(198, 40, 40, 0.1);
+  color: var(--red);
+}
+
+.compare-card.positive .marker {
+  background: rgba(46, 125, 50, 0.1);
+  color: var(--green);
+}
+
+/* --- FEATURES GRID --- */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.feature-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px 26px;
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+.feature-icon {
+  width: 44px;
+  height: 44px;
+  background: var(--accent-light);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.feature-icon svg { width: 22px; height: 22px; color: var(--accent); }
+
+.feature-card h3 {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.feature-card p { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; }
+
+/* --- ARCHITECTURE --- */
+.arch-diagram {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.arch-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.arch-box {
+  padding: 14px 24px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.arch-box.primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+}
+
+.arch-box.secondary {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border-strong);
+}
+
+.arch-box.green {
+  background: rgba(46, 125, 50, 0.08);
+  color: var(--green);
+  border: 1.5px solid rgba(46, 125, 50, 0.2);
+}
+
+.arch-box.neutral {
+  background: var(--bg-warm);
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border);
+}
+
+.arch-arrow {
+  font-size: 1.2rem;
+  color: var(--text-muted);
+}
+
+.arch-arrow-down {
+  font-size: 1.4rem;
+  color: var(--text-muted);
+}
+
+.arch-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  text-align: center;
+}
+
+/* --- HOW IT WORKS --- */
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.step-card { text-align: center; }
+
+.step-number {
+  font-family: var(--font-serif);
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--accent);
+  opacity: 0.25;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+
+.step-card h3 {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.step-card p { font-size: 0.92rem; color: var(--text-secondary); line-height: 1.6; }
+
+.step-card code {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  background: var(--bg-warm);
+  padding: 2px 8px;
+  border-radius: 4px;
+  color: var(--accent);
+}
+
+/* --- COMMANDS TABLE --- */
+.commands-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+  overflow-x: auto;
+}
+
+.commands-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.commands-table th {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  text-align: left;
+  padding: 14px 18px;
+  border-bottom: 2px solid var(--border-strong);
+  color: var(--text-primary);
+}
+
+.commands-table td {
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.commands-table tr:last-child td { border-bottom: none; }
+
+.commands-table .cmd {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.commands-table .desc { color: var(--text-secondary); }
+
+/* --- TECH STACK --- */
+.tech-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.tech-pill {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 10px 22px;
+  border-radius: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  transition: border-color 0.2s;
+}
+
+.tech-pill:hover { border-color: var(--accent); }
+
+/* --- CTA --- */
+.cta-section {
+  text-align: center;
+  padding: 80px 0 96px;
+}
+
+.cta-section h2 {
+  font-family: var(--font-serif);
+  font-size: clamp(1.8rem, 3vw, 2.2rem);
+  font-weight: 700;
+  margin-bottom: 28px;
+}
+
+.cta-code {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  background: #1E1E1E;
+  color: #D4D4D4;
+  padding: 16px 28px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 28px;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.cta-code .prompt { color: var(--accent); }
+
+/* --- FOOTER --- */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 28px 0;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.footer a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer a:hover { color: var(--accent); }
+
+.footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.footer-sep { color: var(--border-strong); }
+
+/* --- ANIMATIONS --- */
+.fade-in {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 1024px) {
+  .why-grid, .features-grid { grid-template-columns: repeat(2, 1fr); }
+  .steps-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .hamburger { display: flex; }
+
+  .hero { padding: 64px 0 48px; }
+  .hero h1 { font-size: 2rem; }
+  .hero-subtitle { font-size: 1rem; }
+  .terminal { margin: 0 -8px; }
+
+  section { padding: 64px 0; }
+
+  .why-grid, .features-grid, .steps-grid { grid-template-columns: 1fr; }
+
+  .comparison-grid { grid-template-columns: 1fr; }
+
+  .arch-row { flex-direction: column; gap: 8px; }
+  .arch-arrow { transform: rotate(90deg); }
+
+  .commands-table { font-size: 0.85rem; }
+  .commands-table th, .commands-table td { padding: 10px 12px; }
+}
+</style>
 </head>
 <body>
 
-<nav>
-  <div class="nav-inner">
-    <div class="nav-logo">ClaudeClaw</div>
-    <div class="nav-links">
-      <a href="#features" data-i18n="nav.features">Features</a>
-      <a href="#architecture" data-i18n="nav.arch">Architecture</a>
-      <a href="#commands" data-i18n="nav.commands">Commands</a>
-      <a href="https://github.com/kalbac/claudeclaw" target="_blank">GitHub</a>
-      <button class="lang-switch" onclick="toggleLang()" id="langBtn">RU</button>
-    </div>
+<!-- NAV -->
+<nav class="nav">
+  <div class="container nav-inner">
+    <a href="#" class="nav-logo">Claude<span>Claw</span></a>
+    <ul class="nav-links">
+      <li><a href="#features" data-i18n="nav.features">Features</a></li>
+      <li><a href="#security" data-i18n="nav.security">Security</a></li>
+      <li><a href="#architecture" data-i18n="nav.architecture">Architecture</a></li>
+      <li><a href="#commands" data-i18n="nav.commands">Commands</a></li>
+      <li><a href="https://github.com/maxmartinezc/ClaudeClaw" target="_blank">GitHub</a></li>
+      <li><button class="lang-toggle" id="langToggle" aria-label="Toggle language">EN / RU</button></li>
+    </ul>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </nav>
 
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#features" data-i18n="nav.features">Features</a>
+  <a href="#security" data-i18n="nav.security">Security</a>
+  <a href="#architecture" data-i18n="nav.architecture">Architecture</a>
+  <a href="#commands" data-i18n="nav.commands">Commands</a>
+  <a href="https://github.com/maxmartinezc/ClaudeClaw" target="_blank">GitHub</a>
+  <button class="lang-toggle" id="langToggleMobile" aria-label="Toggle language">EN / RU</button>
+</div>
+
+<!-- HERO -->
 <section class="hero">
-  <div class="hero-badge"><span class="dot"></span> <span data-i18n="hero.badge">Open Source</span></div>
-  <h1 data-i18n="hero.title">Your AI assistant.<br>In your pocket.</h1>
-  <p data-i18n="hero.sub">Personal AI assistant powered by Claude Code. Talk to it from Telegram — it runs the real Claude on your machine with all your tools, memory, and context.</p>
-  <div class="hero-actions">
-    <a href="https://github.com/kalbac/claudeclaw" class="btn btn-primary" data-i18n="hero.github">Get Started</a>
-    <a href="#features" class="btn btn-secondary" data-i18n="hero.learn">Learn More</a>
-  </div>
+  <div class="container">
+    <div class="hero-badge" data-i18n="hero.badge">Open Source Personal Assistant</div>
+    <h1 data-i18n="hero.title">Your Personal AI Assistant. Powered by <em>Claude Code</em>.</h1>
+    <p class="hero-subtitle" data-i18n="hero.subtitle">ClaudeClaw runs the real Claude Code CLI on your machine, controlled through Telegram. Persistent memory, autonomous tasks, voice messages, and the full power of every MCP tool you have.</p>
+    <div class="hero-buttons">
+      <a href="#get-started" class="btn-primary" data-i18n="hero.cta_primary">Get Started</a>
+      <a href="#why" class="btn-outline" data-i18n="hero.cta_secondary">Learn More</a>
+    </div>
+    <div class="terminal fade-in">
+      <div class="terminal-header">
+        <div class="terminal-dot red"></div>
+        <div class="terminal-dot yellow"></div>
+        <div class="terminal-dot green"></div>
+        <span class="terminal-title">terminal</span>
+      </div>
+      <div class="terminal-body">
+<span class="prompt">$</span> npx tsx scripts/setup.ts
+<span class="success">&#10003;</span> Node.js v22.15.0
+<span class="success">&#10003;</span> Dependencies installed
+<span class="success">&#10003;</span> Build successful
+<span class="success">&#10003;</span> Database OK
 
-  <div class="terminal">
-    <div class="terminal-bar"><div class="terminal-dot"></div><div class="terminal-dot"></div><div class="terminal-dot"></div></div>
-    <div class="terminal-body">
-      <div><span class="prompt">$</span> <span class="cmd">npx tsx scripts/setup.ts</span></div>
-      <div class="out">ClaudeClaw Setup Wizard</div>
-      <div class="out">✓ Node.js v22.15.0</div>
-      <div class="out">✓ Dependencies installed</div>
-      <div class="out">✓ Build successful</div>
-      <div class="out">✓ Database OK</div>
-      <div>&nbsp;</div>
-      <div><span class="prompt">$</span> <span class="cmd">npm start</span></div>
-      <div class="out">Dashboard started on :3141</div>
-      <div class="out">Scheduler started (polling every 60s)</div>
-      <div class="out">ClaudeClaw is running</div>
+<span class="prompt">$</span> npm start
+<span class="info">Dashboard</span> started on :3141
+<span class="info">Scheduler</span> started <span class="dim">(polling every 60s)</span>
+<span class="success">ClaudeClaw is running</span>
+      </div>
     </div>
   </div>
 </section>
 
-<section class="section" id="features">
-  <h2 class="section-title" data-i18n="features.title">Features</h2>
-  <p class="section-sub" data-i18n="features.sub">Everything you need in a personal AI assistant. Nothing you don't.</p>
-
-  <div class="features-grid">
-    <div class="feature-card">
-      <div class="feature-icon">🧠</div>
-      <h3 data-i18n="f.memory.t">Persistent Memory</h3>
-      <p data-i18n="f.memory.d">SQLite with FTS5 full-text search. Semantic and episodic memories with salience-weighted decay. Pin important facts. Search across all conversations.</p>
+<!-- WHY -->
+<section id="why" class="section-warm">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2 data-i18n="why.title">Why ClaudeClaw?</h2>
+      <p data-i18n="why.subtitle">Not another chatbot wrapper. A real CLI agent under your full control.</p>
     </div>
-    <div class="feature-card">
-      <div class="feature-icon">⏰</div>
-      <h3 data-i18n="f.scheduler.t">Cron Scheduler</h3>
-      <p data-i18n="f.scheduler.d">Autonomous background tasks. Morning briefings, email monitoring, memory consolidation. Create tasks via Telegram or CLI with cron expressions.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">📊</div>
-      <h3 data-i18n="f.dashboard.t">Web Dashboard</h3>
-      <p data-i18n="f.dashboard.d">Monitor everything: memory stats, scheduled tasks, token usage, conversation history, audit log. Real-time status with auto-refresh.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">🎙️</div>
-      <h3 data-i18n="f.voice.t">Voice Messages</h3>
-      <p data-i18n="f.voice.d">Send voice notes via Telegram. Groq Whisper transcribes them for free. The assistant processes transcribed text as a normal message.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">📧</div>
-      <h3 data-i18n="f.mail.t">Email Integration</h3>
-      <p data-i18n="f.mail.d">Check unread messages, search by sender or subject. Works with any IMAP provider — Yandex, Gmail, Outlook, and more.</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon">💊</div>
-      <h3 data-i18n="f.heartbeat.t">Heartbeat</h3>
-      <p data-i18n="f.heartbeat.d">Proactive health checks. Define a checklist in HEARTBEAT.md. The assistant periodically reviews it and only notifies you when something needs attention.</p>
+    <div class="why-grid">
+      <div class="why-card fade-in">
+        <div class="why-card-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z"/></svg>
+        </div>
+        <h3 data-i18n="why.card1_title">Not a Wrapper</h3>
+        <p data-i18n="why.card1_desc">Spawns the real Claude Code CLI process. Not an API proxy, not a UI skin. The actual agent with full tool access, skills, and session management.</p>
+      </div>
+      <div class="why-card fade-in">
+        <div class="why-card-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+        </div>
+        <h3 data-i18n="why.card2_title">Your Machine, Your Data</h3>
+        <p data-i18n="why.card2_desc">Everything runs locally. Your tokens stay with Anthropic's infrastructure. No third-party servers, no external databases, no data middlemen.</p>
+      </div>
+      <div class="why-card fade-in">
+        <div class="why-card-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17l-5.384 3.08A1.002 1.002 0 015 17.363V6.638a1 1 0 011.036-.884l5.384 3.08a1 1 0 010 1.696zM17.678 3.322a10 10 0 010 14.142M14.121 6.879a6 6 0 010 8.485"/></svg>
+        </div>
+        <h3 data-i18n="why.card3_title">All Your Tools</h3>
+        <p data-i18n="why.card3_desc">MCP servers, custom skills, browser automation, file system access, Obsidian, databases. If Claude Code can use it, ClaudeClaw can too.</p>
+      </div>
     </div>
   </div>
 </section>
 
-<section class="section" id="architecture">
-  <h2 class="section-title" data-i18n="arch.title">Architecture</h2>
-  <p class="section-sub" data-i18n="arch.sub">Two processes. One assistant. Full control.</p>
-  <div class="arch-block">
-    <pre>
-[Telegram] ←→ [Claude Code Channels Plugin] ←→ [Claude Code CLI]
-                                                      ↕
-                                              [Your Project Dir]
-                                               ├── CLAUDE.md  (core rules)
-                                               ├── AGENT.md   (personality)
-                                               ├── USER.md    (about you)
-                                               └── CLI tools  (memory, schedule, mail)
-                                                      ↕
-                                                 [SQLite DB]
-                                                      ↕
-                                         [Background: npm start]
-                                              ├── Dashboard (Hono)
-                                              ├── Scheduler (cron)
-                                              └── Heartbeat</pre>
+<!-- SECURITY -->
+<section id="security">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2 data-i18n="security.title">Security: Channels vs. OpenClaw</h2>
+      <p data-i18n="security.subtitle">How your tokens flow matters. ClaudeClaw uses the official Channels plugin.</p>
+    </div>
+    <div class="comparison-grid fade-in">
+      <div class="compare-card negative">
+        <h3 data-i18n="security.openclaw_title">OpenClaw / API Proxy</h3>
+        <ul class="compare-list">
+          <li><span class="marker">&times;</span> <span data-i18n="security.openclaw_1">Tokens pass through external code</span></li>
+          <li><span class="marker">&times;</span> <span data-i18n="security.openclaw_2">Prohibited by Anthropic ToS</span></li>
+          <li><span class="marker">&times;</span> <span data-i18n="security.openclaw_3">Security and legal risks</span></li>
+          <li><span class="marker">&times;</span> <span data-i18n="security.openclaw_4">Middleware between you and Claude</span></li>
+        </ul>
+      </div>
+      <div class="compare-card positive">
+        <h3 data-i18n="security.claudeclaw_title">ClaudeClaw (Channels)</h3>
+        <ul class="compare-list">
+          <li><span class="marker">&#10003;</span> <span data-i18n="security.claudeclaw_1">Official Claude Code Channels plugin</span></li>
+          <li><span class="marker">&#10003;</span> <span data-i18n="security.claudeclaw_2">Tokens stay with Anthropic infrastructure</span></li>
+          <li><span class="marker">&#10003;</span> <span data-i18n="security.claudeclaw_3">Official Agent SDK &mdash; guaranteed compatibility</span></li>
+          <li><span class="marker">&#10003;</span> <span data-i18n="security.claudeclaw_4">Direct connection &mdash; no middleware</span></li>
+        </ul>
+      </div>
+    </div>
   </div>
 </section>
 
-<section class="section" id="commands">
-  <h2 class="section-title" data-i18n="cmd.title">Telegram Commands</h2>
-  <p class="section-sub" data-i18n="cmd.sub">Control your assistant from your phone.</p>
-  <div style="overflow-x: auto;">
-    <table class="commands-table">
-      <thead><tr><th data-i18n="cmd.command">Command</th><th data-i18n="cmd.action">Action</th></tr></thead>
-      <tbody>
-        <tr><td><code>/new</code></td><td data-i18n="cmd.new">Start fresh conversation</td></tr>
-        <tr><td><code>/memory search &lt;query&gt;</code></td><td data-i18n="cmd.memsearch">Search memories</td></tr>
-        <tr><td><code>/memory save &lt;text&gt;</code></td><td data-i18n="cmd.memsave">Save to memory</td></tr>
-        <tr><td><code>/schedule list</code></td><td data-i18n="cmd.schedlist">List scheduled tasks</td></tr>
-        <tr><td><code>/mail</code></td><td data-i18n="cmd.mail">Check email</td></tr>
-        <tr><td><code>/briefing</code></td><td data-i18n="cmd.briefing">Morning briefing</td></tr>
-        <tr><td><code>/checkpoint</code></td><td data-i18n="cmd.checkpoint">Save session summary</td></tr>
-        <tr><td><code>/convolife</code></td><td data-i18n="cmd.convo">Context window usage</td></tr>
-      </tbody>
-    </table>
+<!-- FEATURES -->
+<section id="features" class="section-warm">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2 data-i18n="features.title">Features</h2>
+      <p data-i18n="features.subtitle">Everything you need for a persistent, autonomous AI assistant.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card fade-in">
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125"/></svg>
+        </div>
+        <h3 data-i18n="features.memory_title">Persistent Memory</h3>
+        <p data-i18n="features.memory_desc">SQLite with FTS5 full-text search. Semantic and episodic memories with salience decay. Your assistant remembers across sessions.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <h3 data-i18n="features.cron_title">Cron Scheduler</h3>
+        <p data-i18n="features.cron_desc">Autonomous background tasks. Daily briefings, email monitoring, memory consolidation, and custom scheduled actions.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+        </div>
+        <h3 data-i18n="features.dashboard_title">Web Dashboard</h3>
+        <p data-i18n="features.dashboard_desc">Monitor everything: memory stats, scheduled tasks, token usage, conversation history, and audit log. Served on localhost.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"/></svg>
+        </div>
+        <h3 data-i18n="features.voice_title">Voice Messages</h3>
+        <p data-i18n="features.voice_desc">Groq Whisper transcribes voice notes for free. Send a voice message on Telegram and it's processed as normal text input.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+        </div>
+        <h3 data-i18n="features.email_title">Email Integration</h3>
+        <p data-i18n="features.email_desc">Any IMAP provider. Yandex, Gmail, Outlook. Scheduled email checking, summaries, and action triggers.</p>
+      </div>
+      <div class="feature-card fade-in">
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>
+        </div>
+        <h3 data-i18n="features.heartbeat_title">Heartbeat</h3>
+        <p data-i18n="features.heartbeat_desc">Proactive health checks run in the background. Only notifies you when something actually needs your attention.</p>
+      </div>
+    </div>
   </div>
 </section>
 
-<section class="cta">
-  <h2 data-i18n="cta.title">Ready to build your assistant?</h2>
-  <p data-i18n="cta.sub">Clone, setup, go. Under 10 minutes.</p>
-  <a href="https://github.com/kalbac/claudeclaw" class="btn btn-primary" data-i18n="cta.btn">View on GitHub</a>
+<!-- ARCHITECTURE -->
+<section id="architecture">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2 data-i18n="arch.title">Architecture</h2>
+      <p data-i18n="arch.subtitle">Two-process model. Channels plugin handles the connection. Your machine does the work.</p>
+    </div>
+    <div class="arch-diagram fade-in">
+      <!-- Row 1: Main flow -->
+      <div class="arch-row">
+        <div class="arch-box primary">Telegram</div>
+        <div class="arch-arrow">&harr;</div>
+        <div class="arch-box primary">Channels Plugin</div>
+        <div class="arch-arrow">&harr;</div>
+        <div class="arch-box primary">Claude Code CLI</div>
+      </div>
+      <div class="arch-arrow-down">&darr;</div>
+      <!-- Row 2: Project Dir -->
+      <div class="arch-row">
+        <div class="arch-box secondary">Your Project Directory</div>
+      </div>
+      <div class="arch-label">CLAUDE.md &middot; AGENT.md &middot; USER.md &middot; CLI tools &middot; Skills</div>
+      <div class="arch-arrow-down">&darr;</div>
+      <!-- Row 3: SQLite -->
+      <div class="arch-row">
+        <div class="arch-box green">SQLite DB</div>
+      </div>
+      <div class="arch-label" data-i18n="arch.sqlite_label">Memory, conversations, scheduled tasks</div>
+      <div class="arch-arrow-down">&darr;</div>
+      <!-- Row 4: Background -->
+      <div class="arch-row">
+        <div class="arch-box neutral">npm start</div>
+      </div>
+      <div class="arch-label" data-i18n="arch.bg_label">Dashboard :3141 &middot; Scheduler &middot; Heartbeat</div>
+    </div>
+  </div>
 </section>
 
-<footer>
-  <p>ClaudeClaw &mdash; MIT License &mdash; <a href="https://github.com/kalbac/claudeclaw">GitHub</a></p>
-  <p style="margin-top: 8px;" data-i18n="footer.by">Created by a developer from <a href="https://woodev.ru" target="_blank">woodev.ru</a></p>
+<!-- HOW IT WORKS -->
+<section id="get-started" class="section-warm">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2 data-i18n="steps.title">How It Works</h2>
+      <p data-i18n="steps.subtitle">Three steps to a running assistant.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card fade-in">
+        <div class="step-number">01</div>
+        <h3 data-i18n="steps.step1_title">Clone &amp; Setup</h3>
+        <p data-i18n="steps.step1_desc">Clone the repo and run the setup script. It checks Node.js, installs dependencies, builds, and initializes the database.</p>
+        <p style="margin-top:10px"><code>npx tsx scripts/setup.ts</code></p>
+      </div>
+      <div class="step-card fade-in">
+        <div class="step-number">02</div>
+        <h3 data-i18n="steps.step2_title">Personalize</h3>
+        <p data-i18n="steps.step2_desc">Edit CLAUDE.md for agent instructions, USER.md for your profile, and AGENT.md for persona. Your assistant adapts to you.</p>
+      </div>
+      <div class="step-card fade-in">
+        <div class="step-number">03</div>
+        <h3 data-i18n="steps.step3_title">Talk</h3>
+        <p data-i18n="steps.step3_desc">Send messages via Telegram. Text, voice notes, commands. The full power of Claude Code, always in your pocket.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMMANDS -->
+<section id="commands">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2 data-i18n="commands.title">Telegram Commands</h2>
+      <p data-i18n="commands.subtitle">Quick actions available in chat.</p>
+    </div>
+    <div class="commands-wrapper fade-in">
+      <table class="commands-table">
+        <thead>
+          <tr>
+            <th data-i18n="commands.col_cmd">Command</th>
+            <th data-i18n="commands.col_desc">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="cmd">/new</td><td class="desc" data-i18n="commands.new">Start a new conversation</td></tr>
+          <tr><td class="cmd">/memory search &lt;query&gt;</td><td class="desc" data-i18n="commands.memory_search">Search memories by keyword</td></tr>
+          <tr><td class="cmd">/memory save &lt;text&gt;</td><td class="desc" data-i18n="commands.memory_save">Save a new memory manually</td></tr>
+          <tr><td class="cmd">/schedule list</td><td class="desc" data-i18n="commands.schedule_list">View all scheduled tasks</td></tr>
+          <tr><td class="cmd">/schedule create</td><td class="desc" data-i18n="commands.schedule_create">Create a new scheduled task</td></tr>
+          <tr><td class="cmd">/mail</td><td class="desc" data-i18n="commands.mail">Check email and summarize</td></tr>
+          <tr><td class="cmd">/briefing</td><td class="desc" data-i18n="commands.briefing">Get a daily briefing</td></tr>
+          <tr><td class="cmd">/checkpoint</td><td class="desc" data-i18n="commands.checkpoint">Force memory consolidation</td></tr>
+          <tr><td class="cmd">/convolife</td><td class="desc" data-i18n="commands.convolife">Show current conversation stats</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section class="section-warm">
+  <div class="container">
+    <div class="section-header fade-in">
+      <h2 data-i18n="tech.title">Tech Stack</h2>
+    </div>
+    <div class="tech-pills fade-in">
+      <span class="tech-pill">TypeScript</span>
+      <span class="tech-pill">Node.js 22+</span>
+      <span class="tech-pill">SQLite</span>
+      <span class="tech-pill">Hono</span>
+      <span class="tech-pill">Groq Whisper</span>
+      <span class="tech-pill">Claude Code SDK</span>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container fade-in">
+    <h2 data-i18n="cta.title">Ready to build your assistant?</h2>
+    <div class="cta-code"><span class="prompt">$</span> git clone https://github.com/maxmartinezc/ClaudeClaw.git &amp;&amp; cd ClaudeClaw &amp;&amp; npx tsx scripts/setup.ts</div>
+    <br>
+    <a href="https://github.com/maxmartinezc/ClaudeClaw" target="_blank" class="btn-primary" data-i18n="cta.github">View on GitHub</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container footer-inner">
+    <span>MIT License</span>
+    <span class="footer-sep">|</span>
+    <a href="https://github.com/maxmartinezc/ClaudeClaw" target="_blank">GitHub</a>
+    <span class="footer-sep">|</span>
+    <span data-i18n="footer.credit">Created by a developer from <a href="https://woodev.ru" target="_blank">woodev.ru</a></span>
+  </div>
 </footer>
 
 <script>
-const i18n = {
+// --- i18n ---
+const translations = {
   en: {
-    'nav.features': 'Features',
-    'nav.arch': 'Architecture',
-    'nav.commands': 'Commands',
-    'hero.badge': 'Open Source',
-    'hero.title': 'Your AI assistant.<br>In your pocket.',
-    'hero.sub': 'Personal AI assistant powered by Claude Code. Talk to it from Telegram — it runs the real Claude on your machine with all your tools, memory, and context.',
-    'hero.github': 'Get Started',
-    'hero.learn': 'Learn More',
-    'features.title': 'Features',
-    'features.sub': 'Everything you need in a personal AI assistant. Nothing you don\'t.',
-    'f.memory.t': 'Persistent Memory',
-    'f.memory.d': 'SQLite with FTS5 full-text search. Semantic and episodic memories with salience-weighted decay. Pin important facts. Search across all conversations.',
-    'f.scheduler.t': 'Cron Scheduler',
-    'f.scheduler.d': 'Autonomous background tasks. Morning briefings, email monitoring, memory consolidation. Create tasks via Telegram or CLI with cron expressions.',
-    'f.dashboard.t': 'Web Dashboard',
-    'f.dashboard.d': 'Monitor everything: memory stats, scheduled tasks, token usage, conversation history, audit log. Real-time status with auto-refresh.',
-    'f.voice.t': 'Voice Messages',
-    'f.voice.d': 'Send voice notes via Telegram. Groq Whisper transcribes them for free. The assistant processes transcribed text as a normal message.',
-    'f.mail.t': 'Email Integration',
-    'f.mail.d': 'Check unread messages, search by sender or subject. Works with any IMAP provider — Yandex, Gmail, Outlook, and more.',
-    'f.heartbeat.t': 'Heartbeat',
-    'f.heartbeat.d': 'Proactive health checks. Define a checklist in HEARTBEAT.md. The assistant periodically reviews it and only notifies you when something needs attention.',
-    'arch.title': 'Architecture',
-    'arch.sub': 'Two processes. One assistant. Full control.',
-    'cmd.title': 'Telegram Commands',
-    'cmd.sub': 'Control your assistant from your phone.',
-    'cmd.command': 'Command',
-    'cmd.action': 'Action',
-    'cmd.new': 'Start fresh conversation',
-    'cmd.memsearch': 'Search memories',
-    'cmd.memsave': 'Save to memory',
-    'cmd.schedlist': 'List scheduled tasks',
-    'cmd.mail': 'Check email',
-    'cmd.briefing': 'Morning briefing',
-    'cmd.checkpoint': 'Save session summary',
-    'cmd.convo': 'Context window usage',
-    'cta.title': 'Ready to build your assistant?',
-    'cta.sub': 'Clone, setup, go. Under 10 minutes.',
-    'cta.btn': 'View on GitHub',
-    'footer.by': 'Created by a developer from <a href="https://woodev.ru" target="_blank">woodev.ru</a>',
+    "nav.features": "Features",
+    "nav.security": "Security",
+    "nav.architecture": "Architecture",
+    "nav.commands": "Commands",
+    "hero.badge": "Open Source Personal Assistant",
+    "hero.title": "Your Personal AI Assistant. Powered by <em>Claude Code</em>.",
+    "hero.subtitle": "ClaudeClaw runs the real Claude Code CLI on your machine, controlled through Telegram. Persistent memory, autonomous tasks, voice messages, and the full power of every MCP tool you have.",
+    "hero.cta_primary": "Get Started",
+    "hero.cta_secondary": "Learn More",
+    "why.title": "Why ClaudeClaw?",
+    "why.subtitle": "Not another chatbot wrapper. A real CLI agent under your full control.",
+    "why.card1_title": "Not a Wrapper",
+    "why.card1_desc": "Spawns the real Claude Code CLI process. Not an API proxy, not a UI skin. The actual agent with full tool access, skills, and session management.",
+    "why.card2_title": "Your Machine, Your Data",
+    "why.card2_desc": "Everything runs locally. Your tokens stay with Anthropic\u2019s infrastructure. No third-party servers, no external databases, no data middlemen.",
+    "why.card3_title": "All Your Tools",
+    "why.card3_desc": "MCP servers, custom skills, browser automation, file system access, Obsidian, databases. If Claude Code can use it, ClaudeClaw can too.",
+    "security.title": "Security: Channels vs. OpenClaw",
+    "security.subtitle": "How your tokens flow matters. ClaudeClaw uses the official Channels plugin.",
+    "security.openclaw_title": "OpenClaw / API Proxy",
+    "security.openclaw_1": "Tokens pass through external code",
+    "security.openclaw_2": "Prohibited by Anthropic ToS",
+    "security.openclaw_3": "Security and legal risks",
+    "security.openclaw_4": "Middleware between you and Claude",
+    "security.claudeclaw_title": "ClaudeClaw (Channels)",
+    "security.claudeclaw_1": "Official Claude Code Channels plugin",
+    "security.claudeclaw_2": "Tokens stay with Anthropic infrastructure",
+    "security.claudeclaw_3": "Official Agent SDK \u2014 guaranteed compatibility",
+    "security.claudeclaw_4": "Direct connection \u2014 no middleware",
+    "features.title": "Features",
+    "features.subtitle": "Everything you need for a persistent, autonomous AI assistant.",
+    "features.memory_title": "Persistent Memory",
+    "features.memory_desc": "SQLite with FTS5 full-text search. Semantic and episodic memories with salience decay. Your assistant remembers across sessions.",
+    "features.cron_title": "Cron Scheduler",
+    "features.cron_desc": "Autonomous background tasks. Daily briefings, email monitoring, memory consolidation, and custom scheduled actions.",
+    "features.dashboard_title": "Web Dashboard",
+    "features.dashboard_desc": "Monitor everything: memory stats, scheduled tasks, token usage, conversation history, and audit log. Served on localhost.",
+    "features.voice_title": "Voice Messages",
+    "features.voice_desc": "Groq Whisper transcribes voice notes for free. Send a voice message on Telegram and it\u2019s processed as normal text input.",
+    "features.email_title": "Email Integration",
+    "features.email_desc": "Any IMAP provider. Yandex, Gmail, Outlook. Scheduled email checking, summaries, and action triggers.",
+    "features.heartbeat_title": "Heartbeat",
+    "features.heartbeat_desc": "Proactive health checks run in the background. Only notifies you when something actually needs your attention.",
+    "arch.title": "Architecture",
+    "arch.subtitle": "Two-process model. Channels plugin handles the connection. Your machine does the work.",
+    "arch.sqlite_label": "Memory, conversations, scheduled tasks",
+    "arch.bg_label": "Dashboard :3141 \u00b7 Scheduler \u00b7 Heartbeat",
+    "steps.title": "How It Works",
+    "steps.subtitle": "Three steps to a running assistant.",
+    "steps.step1_title": "Clone & Setup",
+    "steps.step1_desc": "Clone the repo and run the setup script. It checks Node.js, installs dependencies, builds, and initializes the database.",
+    "steps.step2_title": "Personalize",
+    "steps.step2_desc": "Edit CLAUDE.md for agent instructions, USER.md for your profile, and AGENT.md for persona. Your assistant adapts to you.",
+    "steps.step3_title": "Talk",
+    "steps.step3_desc": "Send messages via Telegram. Text, voice notes, commands. The full power of Claude Code, always in your pocket.",
+    "commands.title": "Telegram Commands",
+    "commands.subtitle": "Quick actions available in chat.",
+    "commands.col_cmd": "Command",
+    "commands.col_desc": "Description",
+    "commands.new": "Start a new conversation",
+    "commands.memory_search": "Search memories by keyword",
+    "commands.memory_save": "Save a new memory manually",
+    "commands.schedule_list": "View all scheduled tasks",
+    "commands.schedule_create": "Create a new scheduled task",
+    "commands.mail": "Check email and summarize",
+    "commands.briefing": "Get a daily briefing",
+    "commands.checkpoint": "Force memory consolidation",
+    "commands.convolife": "Show current conversation stats",
+    "tech.title": "Tech Stack",
+    "cta.title": "Ready to build your assistant?",
+    "cta.github": "View on GitHub",
+    "footer.credit": "Created by a developer from <a href=\"https://woodev.ru\" target=\"_blank\">woodev.ru</a>"
   },
   ru: {
-    'nav.features': 'Возможности',
-    'nav.arch': 'Архитектура',
-    'nav.commands': 'Команды',
-    'hero.badge': 'Open Source',
-    'hero.title': 'Твой AI-ассистент.<br>В кармане.',
-    'hero.sub': 'Личный AI-ассистент на базе Claude Code. Пиши ему в Telegram — он запускает настоящий Claude на твоей машине со всеми инструментами, памятью и контекстом.',
-    'hero.github': 'Начать',
-    'hero.learn': 'Узнать больше',
-    'features.title': 'Возможности',
-    'features.sub': 'Всё что нужно от личного ассистента. Ничего лишнего.',
-    'f.memory.t': 'Долгосрочная память',
-    'f.memory.d': 'SQLite с полнотекстовым поиском FTS5. Семантическая и эпизодическая память с затуханием по значимости. Закрепление важных фактов. Поиск по всем разговорам.',
-    'f.scheduler.t': 'Планировщик задач',
-    'f.scheduler.d': 'Автономные фоновые задачи. Утренние брифинги, мониторинг почты, консолидация памяти. Создание задач через Telegram или CLI с cron-выражениями.',
-    'f.dashboard.t': 'Веб-дашборд',
-    'f.dashboard.d': 'Мониторинг всего: статистика памяти, задачи, токены, история разговоров, аудит-лог. Обновление в реальном времени.',
-    'f.voice.t': 'Голосовые сообщения',
-    'f.voice.d': 'Отправляй голосовые в Telegram. Groq Whisper транскрибирует бесплатно. Ассистент обрабатывает текст как обычное сообщение.',
-    'f.mail.t': 'Интеграция с почтой',
-    'f.mail.d': 'Проверка непрочитанных, поиск по отправителю или теме. Работает с любым IMAP-провайдером — Яндекс, Gmail, Outlook.',
-    'f.heartbeat.t': 'Heartbeat',
-    'f.heartbeat.d': 'Проактивные проверки здоровья. Определи чек-лист в HEARTBEAT.md. Ассистент периодически проверяет и уведомляет только когда что-то требует внимания.',
-    'arch.title': 'Архитектура',
-    'arch.sub': 'Два процесса. Один ассистент. Полный контроль.',
-    'cmd.title': 'Команды в Telegram',
-    'cmd.sub': 'Управляй ассистентом с телефона.',
-    'cmd.command': 'Команда',
-    'cmd.action': 'Действие',
-    'cmd.new': 'Новый разговор',
-    'cmd.memsearch': 'Поиск по памяти',
-    'cmd.memsave': 'Сохранить в память',
-    'cmd.schedlist': 'Список задач',
-    'cmd.mail': 'Проверить почту',
-    'cmd.briefing': 'Утренний брифинг',
-    'cmd.checkpoint': 'Сохранить саммари сессии',
-    'cmd.convo': 'Использование контекстного окна',
-    'cta.title': 'Готов собрать своего ассистента?',
-    'cta.sub': 'Склонируй, настрой, запусти. Меньше 10 минут.',
-    'cta.btn': 'Открыть на GitHub',
-    'footer.by': 'Создано разработчиком из <a href="https://woodev.ru" target="_blank">woodev.ru</a>',
+    "nav.features": "\u0424\u0443\u043d\u043a\u0446\u0438\u0438",
+    "nav.security": "\u0411\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u043e\u0441\u0442\u044c",
+    "nav.architecture": "\u0410\u0440\u0445\u0438\u0442\u0435\u043a\u0442\u0443\u0440\u0430",
+    "nav.commands": "\u041a\u043e\u043c\u0430\u043d\u0434\u044b",
+    "hero.badge": "\u041f\u0435\u0440\u0441\u043e\u043d\u0430\u043b\u044c\u043d\u044b\u0439 \u0430\u0441\u0441\u0438\u0441\u0442\u0435\u043d\u0442 \u0441 \u043e\u0442\u043a\u0440\u044b\u0442\u044b\u043c \u043a\u043e\u0434\u043e\u043c",
+    "hero.title": "\u0412\u0430\u0448 \u043f\u0435\u0440\u0441\u043e\u043d\u0430\u043b\u044c\u043d\u044b\u0439 AI-\u0430\u0441\u0441\u0438\u0441\u0442\u0435\u043d\u0442. \u041d\u0430 \u0431\u0430\u0437\u0435 <em>Claude Code</em>.",
+    "hero.subtitle": "ClaudeClaw \u0437\u0430\u043f\u0443\u0441\u043a\u0430\u0435\u0442 \u043d\u0430\u0441\u0442\u043e\u044f\u0449\u0438\u0439 Claude Code CLI \u043d\u0430 \u0432\u0430\u0448\u0435\u0439 \u043c\u0430\u0448\u0438\u043d\u0435, \u0443\u043f\u0440\u0430\u0432\u043b\u044f\u0435\u043c\u044b\u0439 \u0447\u0435\u0440\u0435\u0437 Telegram. \u041f\u043e\u0441\u0442\u043e\u044f\u043d\u043d\u0430\u044f \u043f\u0430\u043c\u044f\u0442\u044c, \u0430\u0432\u0442\u043e\u043d\u043e\u043c\u043d\u044b\u0435 \u0437\u0430\u0434\u0430\u0447\u0438, \u0433\u043e\u043b\u043e\u0441\u043e\u0432\u044b\u0435 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u044f \u0438 \u0432\u0441\u044f \u043c\u043e\u0449\u044c \u043a\u0430\u0436\u0434\u043e\u0433\u043e MCP-\u0438\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u0430.",
+    "hero.cta_primary": "\u041d\u0430\u0447\u0430\u0442\u044c",
+    "hero.cta_secondary": "\u041f\u043e\u0434\u0440\u043e\u0431\u043d\u0435\u0435",
+    "why.title": "\u041f\u043e\u0447\u0435\u043c\u0443 ClaudeClaw?",
+    "why.subtitle": "\u041d\u0435 \u043e\u0447\u0435\u0440\u0435\u0434\u043d\u0430\u044f \u043e\u0431\u0451\u0440\u0442\u043a\u0430 \u043d\u0430\u0434 \u0447\u0430\u0442-\u0431\u043e\u0442\u043e\u043c. \u041d\u0430\u0441\u0442\u043e\u044f\u0449\u0438\u0439 CLI-\u0430\u0433\u0435\u043d\u0442 \u043f\u043e\u0434 \u0432\u0430\u0448\u0438\u043c \u043f\u043e\u043b\u043d\u044b\u043c \u043a\u043e\u043d\u0442\u0440\u043e\u043b\u0435\u043c.",
+    "why.card1_title": "\u041d\u0435 \u043e\u0431\u0451\u0440\u0442\u043a\u0430",
+    "why.card1_desc": "\u0417\u0430\u043f\u0443\u0441\u043a\u0430\u0435\u0442 \u043d\u0430\u0441\u0442\u043e\u044f\u0449\u0438\u0439 \u043f\u0440\u043e\u0446\u0435\u0441\u0441 Claude Code CLI. \u041d\u0435 API-\u043f\u0440\u043e\u043a\u0441\u0438, \u043d\u0435 UI-\u0441\u043a\u0438\u043d. \u041d\u0430\u0441\u0442\u043e\u044f\u0449\u0438\u0439 \u0430\u0433\u0435\u043d\u0442 \u0441 \u043f\u043e\u043b\u043d\u044b\u043c \u0434\u043e\u0441\u0442\u0443\u043f\u043e\u043c \u043a \u0438\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u0430\u043c, \u043d\u0430\u0432\u044b\u043a\u0430\u043c \u0438 \u0441\u0435\u0441\u0441\u0438\u044f\u043c.",
+    "why.card2_title": "\u0412\u0430\u0448\u0430 \u043c\u0430\u0448\u0438\u043d\u0430, \u0432\u0430\u0448\u0438 \u0434\u0430\u043d\u043d\u044b\u0435",
+    "why.card2_desc": "\u0412\u0441\u0451 \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442 \u043b\u043e\u043a\u0430\u043b\u044c\u043d\u043e. \u0422\u043e\u043a\u0435\u043d\u044b \u043e\u0441\u0442\u0430\u044e\u0442\u0441\u044f \u0432 \u0438\u043d\u0444\u0440\u0430\u0441\u0442\u0440\u0443\u043a\u0442\u0443\u0440\u0435 Anthropic. \u041d\u0438\u043a\u0430\u043a\u0438\u0445 \u0441\u0442\u043e\u0440\u043e\u043d\u043d\u0438\u0445 \u0441\u0435\u0440\u0432\u0435\u0440\u043e\u0432, \u0432\u043d\u0435\u0448\u043d\u0438\u0445 \u0431\u0430\u0437 \u0434\u0430\u043d\u043d\u044b\u0445, \u043f\u043e\u0441\u0440\u0435\u0434\u043d\u0438\u043a\u043e\u0432.",
+    "why.card3_title": "\u0412\u0441\u0435 \u0432\u0430\u0448\u0438 \u0438\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u044b",
+    "why.card3_desc": "MCP-\u0441\u0435\u0440\u0432\u0435\u0440\u044b, \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c\u0441\u043a\u0438\u0435 \u043d\u0430\u0432\u044b\u043a\u0438, \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u043d\u0430\u044f \u0430\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0437\u0430\u0446\u0438\u044f, \u0444\u0430\u0439\u043b\u043e\u0432\u0430\u044f \u0441\u0438\u0441\u0442\u0435\u043c\u0430, Obsidian, \u0431\u0430\u0437\u044b \u0434\u0430\u043d\u043d\u044b\u0445. \u0415\u0441\u043b\u0438 Claude Code \u043c\u043e\u0436\u0435\u0442 \u044d\u0442\u043e \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u044c \u2014 ClaudeClaw \u0442\u043e\u0436\u0435.",
+    "security.title": "\u0411\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u043e\u0441\u0442\u044c: Channels vs. OpenClaw",
+    "security.subtitle": "\u0412\u0430\u0436\u043d\u043e, \u043a\u0430\u043a \u0438\u043c\u0435\u043d\u043d\u043e \u043f\u0435\u0440\u0435\u0434\u0430\u044e\u0442\u0441\u044f \u0432\u0430\u0448\u0438 \u0442\u043e\u043a\u0435\u043d\u044b. ClaudeClaw \u0438\u0441\u043f\u043e\u043b\u044c\u0437\u0443\u0435\u0442 \u043e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u044b\u0439 \u043f\u043b\u0430\u0433\u0438\u043d Channels.",
+    "security.openclaw_title": "OpenClaw / API-\u043f\u0440\u043e\u043a\u0441\u0438",
+    "security.openclaw_1": "\u0422\u043e\u043a\u0435\u043d\u044b \u043f\u0440\u043e\u0445\u043e\u0434\u044f\u0442 \u0447\u0435\u0440\u0435\u0437 \u0441\u0442\u043e\u0440\u043e\u043d\u043d\u0438\u0439 \u043a\u043e\u0434",
+    "security.openclaw_2": "\u0417\u0430\u043f\u0440\u0435\u0449\u0435\u043d\u043e \u0443\u0441\u043b\u043e\u0432\u0438\u044f\u043c\u0438 Anthropic",
+    "security.openclaw_3": "\u0420\u0438\u0441\u043a\u0438 \u0431\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u043e\u0441\u0442\u0438 \u0438 \u044e\u0440\u0438\u0434\u0438\u0447\u0435\u0441\u043a\u0438\u0435 \u0440\u0438\u0441\u043a\u0438",
+    "security.openclaw_4": "\u041f\u043e\u0441\u0440\u0435\u0434\u043d\u0438\u043a \u043c\u0435\u0436\u0434\u0443 \u0432\u0430\u043c\u0438 \u0438 Claude",
+    "security.claudeclaw_title": "ClaudeClaw (Channels)",
+    "security.claudeclaw_1": "\u041e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u044b\u0439 \u043f\u043b\u0430\u0433\u0438\u043d Claude Code Channels",
+    "security.claudeclaw_2": "\u0422\u043e\u043a\u0435\u043d\u044b \u043e\u0441\u0442\u0430\u044e\u0442\u0441\u044f \u0432 \u0438\u043d\u0444\u0440\u0430\u0441\u0442\u0440\u0443\u043a\u0442\u0443\u0440\u0435 Anthropic",
+    "security.claudeclaw_3": "\u041e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u044b\u0439 Agent SDK \u2014 \u0433\u0430\u0440\u0430\u043d\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u0430\u044f \u0441\u043e\u0432\u043c\u0435\u0441\u0442\u0438\u043c\u043e\u0441\u0442\u044c",
+    "security.claudeclaw_4": "\u041f\u0440\u044f\u043c\u043e\u0435 \u0441\u043e\u0435\u0434\u0438\u043d\u0435\u043d\u0438\u0435 \u2014 \u0431\u0435\u0437 \u043f\u043e\u0441\u0440\u0435\u0434\u043d\u0438\u043a\u043e\u0432",
+    "features.title": "\u0424\u0443\u043d\u043a\u0446\u0438\u0438",
+    "features.subtitle": "\u0412\u0441\u0451 \u043d\u0435\u043e\u0431\u0445\u043e\u0434\u0438\u043c\u043e\u0435 \u0434\u043b\u044f \u043f\u043e\u0441\u0442\u043e\u044f\u043d\u043d\u043e\u0433\u043e \u0430\u0432\u0442\u043e\u043d\u043e\u043c\u043d\u043e\u0433\u043e AI-\u0430\u0441\u0441\u0438\u0441\u0442\u0435\u043d\u0442\u0430.",
+    "features.memory_title": "\u041f\u043e\u0441\u0442\u043e\u044f\u043d\u043d\u0430\u044f \u043f\u0430\u043c\u044f\u0442\u044c",
+    "features.memory_desc": "SQLite \u0441 FTS5 \u043f\u043e\u043b\u043d\u043e\u0442\u0435\u043a\u0441\u0442\u043e\u0432\u044b\u043c \u043f\u043e\u0438\u0441\u043a\u043e\u043c. \u0421\u0435\u043c\u0430\u043d\u0442\u0438\u0447\u0435\u0441\u043a\u0430\u044f \u0438 \u044d\u043f\u0438\u0437\u043e\u0434\u0438\u0447\u0435\u0441\u043a\u0430\u044f \u043f\u0430\u043c\u044f\u0442\u044c \u0441 \u0437\u0430\u0442\u0443\u0445\u0430\u043d\u0438\u0435\u043c \u0432\u0430\u0436\u043d\u043e\u0441\u0442\u0438. \u0410\u0441\u0441\u0438\u0441\u0442\u0435\u043d\u0442 \u043f\u043e\u043c\u043d\u0438\u0442 \u043c\u0435\u0436\u0434\u0443 \u0441\u0435\u0441\u0441\u0438\u044f\u043c\u0438.",
+    "features.cron_title": "Cron-\u043f\u043b\u0430\u043d\u0438\u0440\u043e\u0432\u0449\u0438\u043a",
+    "features.cron_desc": "\u0410\u0432\u0442\u043e\u043d\u043e\u043c\u043d\u044b\u0435 \u0444\u043e\u043d\u043e\u0432\u044b\u0435 \u0437\u0430\u0434\u0430\u0447\u0438. \u0415\u0436\u0435\u0434\u043d\u0435\u0432\u043d\u044b\u0435 \u0431\u0440\u0438\u0444\u0438\u043d\u0433\u0438, \u043c\u043e\u043d\u0438\u0442\u043e\u0440\u0438\u043d\u0433 \u043f\u043e\u0447\u0442\u044b, \u043a\u043e\u043d\u0441\u043e\u043b\u0438\u0434\u0430\u0446\u0438\u044f \u043f\u0430\u043c\u044f\u0442\u0438 \u0438 \u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c\u0441\u043a\u0438\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044f.",
+    "features.dashboard_title": "\u0412\u0435\u0431-\u043f\u0430\u043d\u0435\u043b\u044c",
+    "features.dashboard_desc": "\u041c\u043e\u043d\u0438\u0442\u043e\u0440\u0438\u043d\u0433 \u0432\u0441\u0435\u0433\u043e: \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043a\u0430 \u043f\u0430\u043c\u044f\u0442\u0438, \u0437\u0430\u043f\u043b\u0430\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u044b\u0435 \u0437\u0430\u0434\u0430\u0447\u0438, \u0440\u0430\u0441\u0445\u043e\u0434 \u0442\u043e\u043a\u0435\u043d\u043e\u0432, \u0438\u0441\u0442\u043e\u0440\u0438\u044f \u0440\u0430\u0437\u0433\u043e\u0432\u043e\u0440\u043e\u0432 \u0438 \u0436\u0443\u0440\u043d\u0430\u043b \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0439.",
+    "features.voice_title": "\u0413\u043e\u043b\u043e\u0441\u043e\u0432\u044b\u0435 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u044f",
+    "features.voice_desc": "Groq Whisper \u0442\u0440\u0430\u043d\u0441\u043a\u0440\u0438\u0431\u0438\u0440\u0443\u0435\u0442 \u0433\u043e\u043b\u043e\u0441\u043e\u0432\u044b\u0435 \u0437\u0430\u043c\u0435\u0442\u043a\u0438 \u0431\u0435\u0441\u043f\u043b\u0430\u0442\u043d\u043e. \u041e\u0442\u043f\u0440\u0430\u0432\u044c\u0442\u0435 \u0433\u043e\u043b\u043e\u0441\u043e\u0432\u043e\u0435 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0435 \u0432 Telegram \u2014 \u043e\u043d\u043e \u043e\u0431\u0440\u0430\u0431\u0430\u0442\u044b\u0432\u0430\u0435\u0442\u0441\u044f \u043a\u0430\u043a \u043e\u0431\u044b\u0447\u043d\u044b\u0439 \u0442\u0435\u043a\u0441\u0442.",
+    "features.email_title": "\u0418\u043d\u0442\u0435\u0433\u0440\u0430\u0446\u0438\u044f \u0441 \u043f\u043e\u0447\u0442\u043e\u0439",
+    "features.email_desc": "\u041b\u044e\u0431\u043e\u0439 IMAP-\u043f\u0440\u043e\u0432\u0430\u0439\u0434\u0435\u0440. \u042f\u043d\u0434\u0435\u043a\u0441, Gmail, Outlook. \u041f\u043b\u0430\u043d\u043e\u0432\u0430\u044f \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0430 \u043f\u043e\u0447\u0442\u044b, \u0441\u0432\u043e\u0434\u043a\u0438 \u0438 \u0442\u0440\u0438\u0433\u0433\u0435\u0440\u044b \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0439.",
+    "features.heartbeat_title": "Heartbeat",
+    "features.heartbeat_desc": "\u041f\u0440\u043e\u0430\u043a\u0442\u0438\u0432\u043d\u044b\u0435 \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0438 \u0437\u0434\u043e\u0440\u043e\u0432\u044c\u044f \u0432 \u0444\u043e\u043d\u043e\u0432\u043e\u043c \u0440\u0435\u0436\u0438\u043c\u0435. \u0423\u0432\u0435\u0434\u043e\u043c\u043b\u044f\u0435\u0442 \u0442\u043e\u043b\u044c\u043a\u043e \u043a\u043e\u0433\u0434\u0430 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0442\u0435\u043b\u044c\u043d\u043e \u0442\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044f \u0432\u0430\u0448\u0435 \u0432\u043d\u0438\u043c\u0430\u043d\u0438\u0435.",
+    "arch.title": "\u0410\u0440\u0445\u0438\u0442\u0435\u043a\u0442\u0443\u0440\u0430",
+    "arch.subtitle": "\u0414\u0432\u0443\u0445\u043f\u0440\u043e\u0446\u0435\u0441\u0441\u043d\u0430\u044f \u043c\u043e\u0434\u0435\u043b\u044c. Channels \u043e\u0431\u0435\u0441\u043f\u0435\u0447\u0438\u0432\u0430\u0435\u0442 \u0441\u043e\u0435\u0434\u0438\u043d\u0435\u043d\u0438\u0435. \u0412\u0430\u0448\u0430 \u043c\u0430\u0448\u0438\u043d\u0430 \u0434\u0435\u043b\u0430\u0435\u0442 \u0440\u0430\u0431\u043e\u0442\u0443.",
+    "arch.sqlite_label": "\u041f\u0430\u043c\u044f\u0442\u044c, \u0440\u0430\u0437\u0433\u043e\u0432\u043e\u0440\u044b, \u0437\u0430\u043f\u043b\u0430\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u044b\u0435 \u0437\u0430\u0434\u0430\u0447\u0438",
+    "arch.bg_label": "\u041f\u0430\u043d\u0435\u043b\u044c :3141 \u00b7 \u041f\u043b\u0430\u043d\u0438\u0440\u043e\u0432\u0449\u0438\u043a \u00b7 Heartbeat",
+    "steps.title": "\u041a\u0430\u043a \u044d\u0442\u043e \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442",
+    "steps.subtitle": "\u0422\u0440\u0438 \u0448\u0430\u0433\u0430 \u0434\u043e \u0440\u0430\u0431\u043e\u0442\u0430\u044e\u0449\u0435\u0433\u043e \u0430\u0441\u0441\u0438\u0441\u0442\u0435\u043d\u0442\u0430.",
+    "steps.step1_title": "\u041a\u043b\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0438 \u043d\u0430\u0441\u0442\u0440\u043e\u0438\u0442\u044c",
+    "steps.step1_desc": "\u041a\u043b\u043e\u043d\u0438\u0440\u0443\u0439\u0442\u0435 \u0440\u0435\u043f\u043e\u0437\u0438\u0442\u043e\u0440\u0438\u0439 \u0438 \u0437\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u0435 \u0441\u043a\u0440\u0438\u043f\u0442 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438. \u041e\u043d \u043f\u0440\u043e\u0432\u0435\u0440\u0438\u0442 Node.js, \u0443\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442 \u0437\u0430\u0432\u0438\u0441\u0438\u043c\u043e\u0441\u0442\u0438, \u0441\u043e\u0431\u0435\u0440\u0451\u0442 \u043f\u0440\u043e\u0435\u043a\u0442 \u0438 \u0438\u043d\u0438\u0446\u0438\u0430\u043b\u0438\u0437\u0438\u0440\u0443\u0435\u0442 \u0431\u0430\u0437\u0443 \u0434\u0430\u043d\u043d\u044b\u0445.",
+    "steps.step2_title": "\u041f\u0435\u0440\u0441\u043e\u043d\u0430\u043b\u0438\u0437\u0438\u0440\u043e\u0432\u0430\u0442\u044c",
+    "steps.step2_desc": "\u041e\u0442\u0440\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u0443\u0439\u0442\u0435 CLAUDE.md \u0434\u043b\u044f \u0438\u043d\u0441\u0442\u0440\u0443\u043a\u0446\u0438\u0439 \u0430\u0433\u0435\u043d\u0442\u0443, USER.md \u0434\u043b\u044f \u0432\u0430\u0448\u0435\u0433\u043e \u043f\u0440\u043e\u0444\u0438\u043b\u044f \u0438 AGENT.md \u0434\u043b\u044f \u043f\u0435\u0440\u0441\u043e\u043d\u044b. \u0410\u0441\u0441\u0438\u0441\u0442\u0435\u043d\u0442 \u0430\u0434\u0430\u043f\u0442\u0438\u0440\u0443\u0435\u0442\u0441\u044f \u043f\u043e\u0434 \u0432\u0430\u0441.",
+    "steps.step3_title": "\u041e\u0431\u0449\u0430\u0442\u044c\u0441\u044f",
+    "steps.step3_desc": "\u041e\u0442\u043f\u0440\u0430\u0432\u043b\u044f\u0439\u0442\u0435 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u044f \u0447\u0435\u0440\u0435\u0437 Telegram. \u0422\u0435\u043a\u0441\u0442, \u0433\u043e\u043b\u043e\u0441\u043e\u0432\u044b\u0435 \u0437\u0430\u043c\u0435\u0442\u043a\u0438, \u043a\u043e\u043c\u0430\u043d\u0434\u044b. \u0412\u0441\u044f \u043c\u043e\u0449\u044c Claude Code \u0432\u0441\u0435\u0433\u0434\u0430 \u0432 \u043a\u0430\u0440\u043c\u0430\u043d\u0435.",
+    "commands.title": "\u041a\u043e\u043c\u0430\u043d\u0434\u044b Telegram",
+    "commands.subtitle": "\u0411\u044b\u0441\u0442\u0440\u044b\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044f \u0432 \u0447\u0430\u0442\u0435.",
+    "commands.col_cmd": "\u041a\u043e\u043c\u0430\u043d\u0434\u0430",
+    "commands.col_desc": "\u041e\u043f\u0438\u0441\u0430\u043d\u0438\u0435",
+    "commands.new": "\u041d\u0430\u0447\u0430\u0442\u044c \u043d\u043e\u0432\u044b\u0439 \u0440\u0430\u0437\u0433\u043e\u0432\u043e\u0440",
+    "commands.memory_search": "\u041f\u043e\u0438\u0441\u043a \u0432\u043e\u0441\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u0439 \u043f\u043e \u043a\u043b\u044e\u0447\u0435\u0432\u043e\u043c\u0443 \u0441\u043b\u043e\u0432\u0443",
+    "commands.memory_save": "\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c \u043d\u043e\u0432\u043e\u0435 \u0432\u043e\u0441\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u0435 \u0432\u0440\u0443\u0447\u043d\u0443\u044e",
+    "commands.schedule_list": "\u041f\u043e\u0441\u043c\u043e\u0442\u0440\u0435\u0442\u044c \u0432\u0441\u0435 \u0437\u0430\u043f\u043b\u0430\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u044b\u0435 \u0437\u0430\u0434\u0430\u0447\u0438",
+    "commands.schedule_create": "\u0421\u043e\u0437\u0434\u0430\u0442\u044c \u043d\u043e\u0432\u0443\u044e \u0437\u0430\u043f\u043b\u0430\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u0443\u044e \u0437\u0430\u0434\u0430\u0447\u0443",
+    "commands.mail": "\u041f\u0440\u043e\u0432\u0435\u0440\u0438\u0442\u044c \u043f\u043e\u0447\u0442\u0443 \u0438 \u0441\u0434\u0435\u043b\u0430\u0442\u044c \u0441\u0432\u043e\u0434\u043a\u0443",
+    "commands.briefing": "\u041f\u043e\u043b\u0443\u0447\u0438\u0442\u044c \u0435\u0436\u0435\u0434\u043d\u0435\u0432\u043d\u044b\u0439 \u0431\u0440\u0438\u0444\u0438\u043d\u0433",
+    "commands.checkpoint": "\u041f\u0440\u0438\u043d\u0443\u0434\u0438\u0442\u0435\u043b\u044c\u043d\u0430\u044f \u043a\u043e\u043d\u0441\u043e\u043b\u0438\u0434\u0430\u0446\u0438\u044f \u043f\u0430\u043c\u044f\u0442\u0438",
+    "commands.convolife": "\u041f\u043e\u043a\u0430\u0437\u0430\u0442\u044c \u0441\u0442\u0430\u0442\u0438\u0441\u0442\u0438\u043a\u0443 \u0442\u0435\u043a\u0443\u0449\u0435\u0433\u043e \u0440\u0430\u0437\u0433\u043e\u0432\u043e\u0440\u0430",
+    "tech.title": "\u0422\u0435\u0445\u043d\u043e\u043b\u043e\u0433\u0438\u0447\u0435\u0441\u043a\u0438\u0439 \u0441\u0442\u0435\u043a",
+    "cta.title": "\u0413\u043e\u0442\u043e\u0432\u044b \u0441\u043e\u0431\u0440\u0430\u0442\u044c \u0441\u0432\u043e\u0435\u0433\u043e \u0430\u0441\u0441\u0438\u0441\u0442\u0435\u043d\u0442\u0430?",
+    "cta.github": "\u041e\u0442\u043a\u0440\u044b\u0442\u044c \u043d\u0430 GitHub",
+    "footer.credit": "\u0421\u043e\u0437\u0434\u0430\u043d\u043e \u0440\u0430\u0437\u0440\u0430\u0431\u043e\u0442\u0447\u0438\u043a\u043e\u043c \u0438\u0437 <a href=\"https://woodev.ru\" target=\"_blank\">woodev.ru</a>"
   }
 };
 
-let lang = localStorage.getItem('claw-lang') || 'en';
+let currentLang = localStorage.getItem('claudeclaw-lang') || 'en';
 
-function applyLang() {
-  const strings = i18n[lang];
+function applyLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('claudeclaw-lang', lang);
+  document.documentElement.lang = lang;
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
-    if (strings[key]) el.innerHTML = strings[key];
+    if (translations[lang] && translations[lang][key]) {
+      el.innerHTML = translations[lang][key];
+    }
   });
-  document.getElementById('langBtn').textContent = lang === 'en' ? 'RU' : 'EN';
-  document.documentElement.lang = lang;
 }
 
 function toggleLang() {
-  lang = lang === 'en' ? 'ru' : 'en';
-  localStorage.setItem('claw-lang', lang);
-  applyLang();
+  applyLang(currentLang === 'en' ? 'ru' : 'en');
 }
 
-applyLang();
+document.getElementById('langToggle').addEventListener('click', toggleLang);
+document.getElementById('langToggleMobile').addEventListener('click', toggleLang);
 
-// Smooth scroll
-document.querySelectorAll('a[href^="#"]').forEach(a => {
-  a.addEventListener('click', e => {
-    e.preventDefault();
-    const target = document.querySelector(a.getAttribute('href'));
-    if (target) target.scrollIntoView({ behavior: 'smooth' });
+applyLang(currentLang);
+
+// --- MOBILE MENU ---
+const hamburger = document.getElementById('hamburgerBtn');
+const mobileMenu = document.getElementById('mobileMenu');
+
+hamburger.addEventListener('click', () => {
+  mobileMenu.classList.toggle('open');
+});
+
+mobileMenu.querySelectorAll('a').forEach(link => {
+  link.addEventListener('click', () => {
+    mobileMenu.classList.remove('open');
+  });
+});
+
+// --- SCROLL ANIMATIONS ---
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+// --- SMOOTH SCROLL ---
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function(e) {
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   });
 });
 </script>
-
 </body>
 </html>
