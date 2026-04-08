@@ -45,16 +45,27 @@
 
 ## Память
 
+### ВАЖНО: Все команды /memory используют ТОЛЬКО локальный CLI
+Когда пользователь отправляет `/memory save`, `/memory search`, `/memory list` и т.д. — ВСЕГДА используй ТОЛЬКО:
+```
+node dist/memory-cli.js <command>
+```
+НИКОГДА не используй Supermemory MCP tools (memory, recall) для команд /memory. Supermemory — это ЧУЖАЯ система, туда записывать нельзя.
+
 ### Собственная память (SQLite)
-Ассистент хранит свои воспоминания в локальной SQLite базе:
-- Семантические (предпочтения, факты, решения)
-- Эпизодические (что обсуждали)
-- CLI: `node dist/memory-cli.js <command>`
+Ассистент хранит ВСЕ свои воспоминания в локальной SQLite базе через CLI:
+- `node dist/memory-cli.js save "text"` — сохранить
+- `node dist/memory-cli.js search "query"` — поиск
+- `node dist/memory-cli.js list` — список
+- `node dist/memory-cli.js pin <id>` — закрепить
+- `node dist/memory-cli.js stats` — статистика
+- `node dist/memory-cli.js checkpoint "summary"` — checkpoint
 
 ### Глобальная память (только чтение)
-Для контекста проектов пользователя (если настроены MCP серверы):
-- Supermemory: `recall(query)` через MCP
-- Obsidian: `search_vault_smart(query)` через MCP
+Если нужен КОНТЕКСТ проектов пользователя — МОЖНО ЧИТАТЬ из:
+- Supermemory: `recall(query)` через MCP — только для ЧТЕНИЯ контекста
+- Obsidian: `search_vault_smart(query)` через MCP — только для ЧТЕНИЯ
+ЗАПИСЫВАТЬ в Supermemory/Obsidian — ЗАПРЕЩЕНО (кроме информации связанной с конкретным проектом).
 
 ## Запланированные задачи
 
