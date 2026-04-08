@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClaudeClaw — Personal AI Assistant</title>
+  <meta name="description" content="Personal AI assistant powered by Claude Code. Telegram bot with memory, scheduler, dashboard, and voice transcription.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --bg2: #12121a;
+      --bg3: #1a1a28;
+      --text: #e4e4ec;
+      --text2: #9898ab;
+      --accent: #7c6ef0;
+      --accent2: #9b8ffa;
+      --green: #4ade80;
+      --border: #2a2a3a;
+      --radius: 16px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    a { color: var(--accent2); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code, .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* Nav */
+    nav {
+      position: fixed; top: 0; width: 100%; z-index: 100;
+      background: rgba(10,10,15,0.85); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+    }
+    .nav-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; justify-content: space-between; align-items: center;
+      height: 60px;
+    }
+    .nav-logo { font-weight: 800; font-size: 18px; color: var(--accent); }
+    .nav-links { display: flex; gap: 24px; align-items: center; }
+    .nav-links a { color: var(--text2); font-size: 14px; font-weight: 500; }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+    .lang-switch {
+      background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+      padding: 4px 12px; color: var(--text2); font-size: 13px; cursor: pointer;
+    }
+    .lang-switch:hover { border-color: var(--accent); color: var(--text); }
+
+    /* Hero */
+    .hero {
+      min-height: 100vh; display: flex; flex-direction: column;
+      justify-content: center; align-items: center; text-align: center;
+      padding: 120px 24px 80px;
+      background: radial-gradient(ellipse at 50% 0%, rgba(124,110,240,0.08) 0%, transparent 60%);
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--bg3); border: 1px solid var(--border); border-radius: 100px;
+      padding: 6px 16px; font-size: 13px; color: var(--text2); margin-bottom: 32px;
+    }
+    .hero-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+    .hero h1 {
+      font-size: clamp(40px, 8vw, 72px); font-weight: 800;
+      line-height: 1.1; margin-bottom: 24px;
+      background: linear-gradient(135deg, #fff 0%, var(--accent2) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero p { font-size: 20px; color: var(--text2); max-width: 640px; margin-bottom: 40px; }
+    .hero-actions { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 14px 28px; border-radius: 12px; font-weight: 600; font-size: 15px;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent2); text-decoration: none; transform: translateY(-1px); }
+    .btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--accent); text-decoration: none; }
+
+    /* Terminal */
+    .terminal {
+      max-width: 680px; width: 100%; margin: 60px auto 0;
+      background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .terminal-bar {
+      display: flex; gap: 8px; padding: 12px 16px;
+      background: var(--bg3); border-bottom: 1px solid var(--border);
+    }
+    .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .terminal-dot:nth-child(1) { background: #ff5f57; }
+    .terminal-dot:nth-child(2) { background: #febc2e; }
+    .terminal-dot:nth-child(3) { background: #28c840; }
+    .terminal-body { padding: 20px; font-size: 14px; line-height: 1.8; }
+    .terminal-body .prompt { color: var(--green); }
+    .terminal-body .cmd { color: var(--text); }
+    .terminal-body .out { color: var(--text2); }
+
+    /* Features */
+    .section { max-width: 1200px; margin: 0 auto; padding: 100px 24px; }
+    .section-title {
+      font-size: 36px; font-weight: 800; margin-bottom: 16px; text-align: center;
+    }
+    .section-sub { color: var(--text2); text-align: center; max-width: 600px; margin: 0 auto 60px; font-size: 17px; }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;
+    }
+    .feature-card {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 32px;
+      transition: border-color 0.2s;
+    }
+    .feature-card:hover { border-color: var(--accent); }
+    .feature-icon { font-size: 28px; margin-bottom: 16px; }
+    .feature-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .feature-card p { color: var(--text2); font-size: 14px; line-height: 1.6; }
+
+    /* Architecture */
+    .arch-block {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 40px; overflow-x: auto;
+    }
+    .arch-block pre {
+      font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      color: var(--text2); line-height: 1.8; white-space: pre;
+    }
+
+    /* Commands */
+    .commands-table { width: 100%; border-collapse: collapse; }
+    .commands-table th, .commands-table td {
+      text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 14px;
+    }
+    .commands-table th { color: var(--text2); font-weight: 500; }
+    .commands-table code { background: var(--bg3); padding: 2px 8px; border-radius: 4px; font-size: 13px; }
+
+    /* CTA */
+    .cta {
+      text-align: center; padding: 80px 24px;
+      background: linear-gradient(180deg, transparent 0%, rgba(124,110,240,0.05) 100%);
+    }
+    .cta h2 { font-size: 32px; font-weight: 800; margin-bottom: 16px; }
+    .cta p { color: var(--text2); margin-bottom: 32px; }
+
+    /* Footer */
+    footer {
+      text-align: center; padding: 40px 24px;
+      border-top: 1px solid var(--border); color: var(--text2); font-size: 13px;
+    }
+    footer a { color: var(--accent2); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 36px; }
+      .hero p { font-size: 16px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .nav-links { gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo">ClaudeClaw</div>
+    <div class="nav-links">
+      <a href="#features" data-i18n="nav.features">Features</a>
+      <a href="#architecture" data-i18n="nav.arch">Architecture</a>
+      <a href="#commands" data-i18n="nav.commands">Commands</a>
+      <a href="https://github.com/kalbac/claudeclaw" target="_blank">GitHub</a>
+      <button class="lang-switch" onclick="toggleLang()" id="langBtn">RU</button>
+    </div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-badge"><span class="dot"></span> <span data-i18n="hero.badge">Open Source</span></div>
+  <h1 data-i18n="hero.title">Your AI assistant.<br>In your pocket.</h1>
+  <p data-i18n="hero.sub">Personal AI assistant powered by Claude Code. Talk to it from Telegram — it runs the real Claude on your machine with all your tools, memory, and context.</p>
+  <div class="hero-actions">
+    <a href="https://github.com/kalbac/claudeclaw" class="btn btn-primary" data-i18n="hero.github">Get Started</a>
+    <a href="#features" class="btn btn-secondary" data-i18n="hero.learn">Learn More</a>
+  </div>
+
+  <div class="terminal">
+    <div class="terminal-bar"><div class="terminal-dot"></div><div class="terminal-dot"></div><div class="terminal-dot"></div></div>
+    <div class="terminal-body">
+      <div><span class="prompt">$</span> <span class="cmd">npx tsx scripts/setup.ts</span></div>
+      <div class="out">ClaudeClaw Setup Wizard</div>
+      <div class="out">✓ Node.js v22.15.0</div>
+      <div class="out">✓ Dependencies installed</div>
+      <div class="out">✓ Build successful</div>
+      <div class="out">✓ Database OK</div>
+      <div>&nbsp;</div>
+      <div><span class="prompt">$</span> <span class="cmd">npm start</span></div>
+      <div class="out">Dashboard started on :3141</div>
+      <div class="out">Scheduler started (polling every 60s)</div>
+      <div class="out">ClaudeClaw is running</div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="features">
+  <h2 class="section-title" data-i18n="features.title">Features</h2>
+  <p class="section-sub" data-i18n="features.sub">Everything you need in a personal AI assistant. Nothing you don't.</p>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🧠</div>
+      <h3 data-i18n="f.memory.t">Persistent Memory</h3>
+      <p data-i18n="f.memory.d">SQLite with FTS5 full-text search. Semantic and episodic memories with salience-weighted decay. Pin important facts. Search across all conversations.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⏰</div>
+      <h3 data-i18n="f.scheduler.t">Cron Scheduler</h3>
+      <p data-i18n="f.scheduler.d">Autonomous background tasks. Morning briefings, email monitoring, memory consolidation. Create tasks via Telegram or CLI with cron expressions.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <h3 data-i18n="f.dashboard.t">Web Dashboard</h3>
+      <p data-i18n="f.dashboard.d">Monitor everything: memory stats, scheduled tasks, token usage, conversation history, audit log. Real-time status with auto-refresh.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🎙️</div>
+      <h3 data-i18n="f.voice.t">Voice Messages</h3>
+      <p data-i18n="f.voice.d">Send voice notes via Telegram. Groq Whisper transcribes them for free. The assistant processes transcribed text as a normal message.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📧</div>
+      <h3 data-i18n="f.mail.t">Email Integration</h3>
+      <p data-i18n="f.mail.d">Check unread messages, search by sender or subject. Works with any IMAP provider — Yandex, Gmail, Outlook, and more.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💊</div>
+      <h3 data-i18n="f.heartbeat.t">Heartbeat</h3>
+      <p data-i18n="f.heartbeat.d">Proactive health checks. Define a checklist in HEARTBEAT.md. The assistant periodically reviews it and only notifies you when something needs attention.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="architecture">
+  <h2 class="section-title" data-i18n="arch.title">Architecture</h2>
+  <p class="section-sub" data-i18n="arch.sub">Two processes. One assistant. Full control.</p>
+  <div class="arch-block">
+    <pre>
+[Telegram] ←→ [Claude Code Channels Plugin] ←→ [Claude Code CLI]
+                                                      ↕
+                                              [Your Project Dir]
+                                               ├── CLAUDE.md  (core rules)
+                                               ├── AGENT.md   (personality)
+                                               ├── USER.md    (about you)
+                                               └── CLI tools  (memory, schedule, mail)
+                                                      ↕
+                                                 [SQLite DB]
+                                                      ↕
+                                         [Background: npm start]
+                                              ├── Dashboard (Hono)
+                                              ├── Scheduler (cron)
+                                              └── Heartbeat</pre>
+  </div>
+</section>
+
+<section class="section" id="commands">
+  <h2 class="section-title" data-i18n="cmd.title">Telegram Commands</h2>
+  <p class="section-sub" data-i18n="cmd.sub">Control your assistant from your phone.</p>
+  <div style="overflow-x: auto;">
+    <table class="commands-table">
+      <thead><tr><th data-i18n="cmd.command">Command</th><th data-i18n="cmd.action">Action</th></tr></thead>
+      <tbody>
+        <tr><td><code>/new</code></td><td data-i18n="cmd.new">Start fresh conversation</td></tr>
+        <tr><td><code>/memory search &lt;query&gt;</code></td><td data-i18n="cmd.memsearch">Search memories</td></tr>
+        <tr><td><code>/memory save &lt;text&gt;</code></td><td data-i18n="cmd.memsave">Save to memory</td></tr>
+        <tr><td><code>/schedule list</code></td><td data-i18n="cmd.schedlist">List scheduled tasks</td></tr>
+        <tr><td><code>/mail</code></td><td data-i18n="cmd.mail">Check email</td></tr>
+        <tr><td><code>/briefing</code></td><td data-i18n="cmd.briefing">Morning briefing</td></tr>
+        <tr><td><code>/checkpoint</code></td><td data-i18n="cmd.checkpoint">Save session summary</td></tr>
+        <tr><td><code>/convolife</code></td><td data-i18n="cmd.convo">Context window usage</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="cta">
+  <h2 data-i18n="cta.title">Ready to build your assistant?</h2>
+  <p data-i18n="cta.sub">Clone, setup, go. Under 10 minutes.</p>
+  <a href="https://github.com/kalbac/claudeclaw" class="btn btn-primary" data-i18n="cta.btn">View on GitHub</a>
+</section>
+
+<footer>
+  <p>ClaudeClaw &mdash; MIT License &mdash; <a href="https://github.com/kalbac/claudeclaw">GitHub</a></p>
+  <p style="margin-top: 8px;" data-i18n="footer.by">Created by a developer from <a href="https://woodev.ru" target="_blank">woodev.ru</a></p>
+</footer>
+
+<script>
+const i18n = {
+  en: {
+    'nav.features': 'Features',
+    'nav.arch': 'Architecture',
+    'nav.commands': 'Commands',
+    'hero.badge': 'Open Source',
+    'hero.title': 'Your AI assistant.<br>In your pocket.',
+    'hero.sub': 'Personal AI assistant powered by Claude Code. Talk to it from Telegram — it runs the real Claude on your machine with all your tools, memory, and context.',
+    'hero.github': 'Get Started',
+    'hero.learn': 'Learn More',
+    'features.title': 'Features',
+    'features.sub': 'Everything you need in a personal AI assistant. Nothing you don\'t.',
+    'f.memory.t': 'Persistent Memory',
+    'f.memory.d': 'SQLite with FTS5 full-text search. Semantic and episodic memories with salience-weighted decay. Pin important facts. Search across all conversations.',
+    'f.scheduler.t': 'Cron Scheduler',
+    'f.scheduler.d': 'Autonomous background tasks. Morning briefings, email monitoring, memory consolidation. Create tasks via Telegram or CLI with cron expressions.',
+    'f.dashboard.t': 'Web Dashboard',
+    'f.dashboard.d': 'Monitor everything: memory stats, scheduled tasks, token usage, conversation history, audit log. Real-time status with auto-refresh.',
+    'f.voice.t': 'Voice Messages',
+    'f.voice.d': 'Send voice notes via Telegram. Groq Whisper transcribes them for free. The assistant processes transcribed text as a normal message.',
+    'f.mail.t': 'Email Integration',
+    'f.mail.d': 'Check unread messages, search by sender or subject. Works with any IMAP provider — Yandex, Gmail, Outlook, and more.',
+    'f.heartbeat.t': 'Heartbeat',
+    'f.heartbeat.d': 'Proactive health checks. Define a checklist in HEARTBEAT.md. The assistant periodically reviews it and only notifies you when something needs attention.',
+    'arch.title': 'Architecture',
+    'arch.sub': 'Two processes. One assistant. Full control.',
+    'cmd.title': 'Telegram Commands',
+    'cmd.sub': 'Control your assistant from your phone.',
+    'cmd.command': 'Command',
+    'cmd.action': 'Action',
+    'cmd.new': 'Start fresh conversation',
+    'cmd.memsearch': 'Search memories',
+    'cmd.memsave': 'Save to memory',
+    'cmd.schedlist': 'List scheduled tasks',
+    'cmd.mail': 'Check email',
+    'cmd.briefing': 'Morning briefing',
+    'cmd.checkpoint': 'Save session summary',
+    'cmd.convo': 'Context window usage',
+    'cta.title': 'Ready to build your assistant?',
+    'cta.sub': 'Clone, setup, go. Under 10 minutes.',
+    'cta.btn': 'View on GitHub',
+    'footer.by': 'Created by a developer from <a href="https://woodev.ru" target="_blank">woodev.ru</a>',
+  },
+  ru: {
+    'nav.features': 'Возможности',
+    'nav.arch': 'Архитектура',
+    'nav.commands': 'Команды',
+    'hero.badge': 'Open Source',
+    'hero.title': 'Твой AI-ассистент.<br>В кармане.',
+    'hero.sub': 'Личный AI-ассистент на базе Claude Code. Пиши ему в Telegram — он запускает настоящий Claude на твоей машине со всеми инструментами, памятью и контекстом.',
+    'hero.github': 'Начать',
+    'hero.learn': 'Узнать больше',
+    'features.title': 'Возможности',
+    'features.sub': 'Всё что нужно от личного ассистента. Ничего лишнего.',
+    'f.memory.t': 'Долгосрочная память',
+    'f.memory.d': 'SQLite с полнотекстовым поиском FTS5. Семантическая и эпизодическая память с затуханием по значимости. Закрепление важных фактов. Поиск по всем разговорам.',
+    'f.scheduler.t': 'Планировщик задач',
+    'f.scheduler.d': 'Автономные фоновые задачи. Утренние брифинги, мониторинг почты, консолидация памяти. Создание задач через Telegram или CLI с cron-выражениями.',
+    'f.dashboard.t': 'Веб-дашборд',
+    'f.dashboard.d': 'Мониторинг всего: статистика памяти, задачи, токены, история разговоров, аудит-лог. Обновление в реальном времени.',
+    'f.voice.t': 'Голосовые сообщения',
+    'f.voice.d': 'Отправляй голосовые в Telegram. Groq Whisper транскрибирует бесплатно. Ассистент обрабатывает текст как обычное сообщение.',
+    'f.mail.t': 'Интеграция с почтой',
+    'f.mail.d': 'Проверка непрочитанных, поиск по отправителю или теме. Работает с любым IMAP-провайдером — Яндекс, Gmail, Outlook.',
+    'f.heartbeat.t': 'Heartbeat',
+    'f.heartbeat.d': 'Проактивные проверки здоровья. Определи чек-лист в HEARTBEAT.md. Ассистент периодически проверяет и уведомляет только когда что-то требует внимания.',
+    'arch.title': 'Архитектура',
+    'arch.sub': 'Два процесса. Один ассистент. Полный контроль.',
+    'cmd.title': 'Команды в Telegram',
+    'cmd.sub': 'Управляй ассистентом с телефона.',
+    'cmd.command': 'Команда',
+    'cmd.action': 'Действие',
+    'cmd.new': 'Новый разговор',
+    'cmd.memsearch': 'Поиск по памяти',
+    'cmd.memsave': 'Сохранить в память',
+    'cmd.schedlist': 'Список задач',
+    'cmd.mail': 'Проверить почту',
+    'cmd.briefing': 'Утренний брифинг',
+    'cmd.checkpoint': 'Сохранить саммари сессии',
+    'cmd.convo': 'Использование контекстного окна',
+    'cta.title': 'Готов собрать своего ассистента?',
+    'cta.sub': 'Склонируй, настрой, запусти. Меньше 10 минут.',
+    'cta.btn': 'Открыть на GitHub',
+    'footer.by': 'Создано разработчиком из <a href="https://woodev.ru" target="_blank">woodev.ru</a>',
+  }
+};
+
+let lang = localStorage.getItem('claw-lang') || 'en';
+
+function applyLang() {
+  const strings = i18n[lang];
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (strings[key]) el.innerHTML = strings[key];
+  });
+  document.getElementById('langBtn').textContent = lang === 'en' ? 'RU' : 'EN';
+  document.documentElement.lang = lang;
+}
+
+function toggleLang() {
+  lang = lang === 'en' ? 'ru' : 'en';
+  localStorage.setItem('claw-lang', lang);
+  applyLang();
+}
+
+applyLang();
+
+// Smooth scroll
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+</script>
+
+</body>
+</html>
