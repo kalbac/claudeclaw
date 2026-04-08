@@ -21,6 +21,7 @@
   ],
   "scripts": {
     "build": "tsc",
+    "set-commands": "tsx scripts/set-commands.ts",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
     "setup": "tsx scripts/setup.ts",

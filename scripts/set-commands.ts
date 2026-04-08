@@ -51,11 +51,15 @@ async function main() {
     process.exit(1)
   }
 
+  // Must use same scope as channels plugin (all_private_chats) to override
   const url = `https://api.telegram.org/bot${token}/setMyCommands`
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ commands }),
+    body: JSON.stringify({
+      commands,
+      scope: { type: 'all_private_chats' },
+    }),
   })
 
   const data = await res.json() as any
