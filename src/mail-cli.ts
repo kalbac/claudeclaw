@@ -1,28 +1,35 @@
 #!/usr/bin/env node
 
-import { getUnreadMail, searchMail } from './mail.js'
+import { getUnreadMail, getRecentMail, searchMail } from './mail.js'
+import type { MailMessage } from './mail.js'
 
 const [, , command, ...args] = process.argv
 
+function formatMessages(messages: MailMessage[]): void {
+  if (messages.length === 0) {
+    console.log('No messages found.')
+    return
+  }
+  for (const m of messages) {
+    const date = m.date ? new Date(m.date).toLocaleDateString('ru-RU') : '?'
+    const flag = m.seen ? '  ' : '📧'
+    console.log(`${flag} [${m.uid}] ${date} | ${m.from} | ${m.subject}`)
+  }
+}
+
 async function main() {
   switch (command) {
+    case 'recent': {
+      const limit = parseInt(args[0] ?? '10', 10)
+      console.log(`Last ${limit} messages:`)
+      formatMessages(await getRecentMail(limit))
+      break
+    }
+
     case 'unread': {
       const limit = parseInt(args[0] ?? '10', 10)
-      try {
-        const messages = await getUnreadMail(limit)
-        if (messages.length === 0) {
-          console.log('No unread messages.')
-        } else {
-          console.log(`Unread messages (${messages.length}):`)
-          for (const m of messages) {
-            const date = m.date ? new Date(m.date).toLocaleDateString('ru-RU') : '?'
-            console.log(`  📧 [${m.uid}] ${date} | ${m.from} | ${m.subject}`)
-          }
-        }
-      } catch (err: any) {
-        console.error(`Error: ${err.message}`)
-        process.exit(1)
-      }
+      console.log('Unread messages (newest first):')
+      formatMessages(await getUnreadMail(limit))
       break
     }
 
@@ -32,20 +39,7 @@ async function main() {
         console.log('Usage: mail-cli search <query>')
         process.exit(1)
       }
-      try {
-        const messages = await searchMail(query)
-        if (messages.length === 0) {
-          console.log('No messages found.')
-        } else {
-          for (const m of messages) {
-            const date = m.date ? new Date(m.date).toLocaleDateString('ru-RU') : '?'
-            console.log(`  📧 [${m.uid}] ${date} | ${m.from} | ${m.subject}`)
-          }
-        }
-      } catch (err: any) {
-        console.error(`Error: ${err.message}`)
-        process.exit(1)
-      }
+      formatMessages(await searchMail(query))
       break
     }
 
@@ -53,13 +47,14 @@ async function main() {
       console.log(`ClaudeClaw Mail CLI (IMAP)
 
 Commands:
-  unread [limit]     Show unread messages (default: 10)
+  recent [limit]     Last N messages, newest first (default: 10)
+  unread [limit]     Unread messages, newest first (default: 10)
   search <query>     Search by subject or sender`)
       break
   }
 }
 
 main().catch((err) => {
-  console.error(err.message)
+  console.error(`Error: ${err.message}`)
   process.exit(1)
 })

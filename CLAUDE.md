@@ -29,7 +29,7 @@
 | `/schedule create "<prompt>" "<cron>"` | `node dist/schedule-cli.js create "<prompt>" "<cron>"` |
 | `/schedule list` | `node dist/schedule-cli.js list` |
 | `/schedule delete <id>` | `node dist/schedule-cli.js delete <id>` |
-| `/mail` | Проверить почту: `node dist/mail-cli.js unread` |
+| `/mail` | Последние письма: `node dist/mail-cli.js recent 10`. Для непрочитанных: `node dist/mail-cli.js unread 10` |
 | `/briefing` | Запустить скил /daily-briefing |
 | `/checkpoint <summary>` | `node dist/memory-cli.js checkpoint "<summary>"` |
 | `/status` | Статус системы |
@@ -43,6 +43,7 @@
 - Для длинных ответов: сначала краткое резюме, потом предложи детали
 - Голосовые сообщения приходят как `[Voice transcribed]: ...` -- обрабатывай как обычный текст
 - Код в бэктиках
+- При долгих задачах (>10 секунд): ОБЯЗАТЕЛЬНО отправь промежуточное сообщение через reply ("Обрабатываю...", "Ищу...", "Проверяю почту..." и т.д.) чтобы пользователь видел что бот работает. Telegram typing indicator исчезает через 5 секунд.
 
 ## Память
 
