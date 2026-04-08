@@ -61,6 +61,10 @@ body {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border);
+  box-shadow:
+    0 4px 24px rgba(217, 119, 87, 0.08),
+    0 8px 48px rgba(217, 119, 87, 0.04),
+    0 1px 0 rgba(217, 119, 87, 0.06);
 }
 
 .nav-inner {
@@ -162,6 +166,21 @@ body {
 .hero {
   padding: 100px 0 80px;
   text-align: center;
+  position: relative;
+  overflow: hidden;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='none' stroke='%23C4886E' stroke-width='0.6' opacity='0.12'%3E%3Ccircle cx='40' cy='40' r='4'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3Ccircle cx='70' cy='10' r='2'/%3E%3Ccircle cx='10' cy='70' r='2'/%3E%3Ccircle cx='70' cy='70' r='2'/%3E%3Cpath d='M14 12l22 24M44 36l22-22M14 68l22-24M44 44l22 22'/%3E%3Cpath d='M40 4v32M40 44v32M4 40h32M44 40h32' stroke-dasharray='3 4'/%3E%3Crect x='36' y='36' width='8' height='8' rx='2'/%3E%3C/g%3E%3C/svg%3E") repeat,
+    radial-gradient(ellipse 80% 50% at 50% -5%, rgba(217,119,87,0.07) 0%, transparent 70%),
+    var(--bg-main);
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 120px;
+  background: linear-gradient(180deg, rgba(217,119,87,0.05) 0%, transparent 100%);
+  pointer-events: none;
 }
 
 .hero-badge {
@@ -303,6 +322,74 @@ body {
 section { padding: 96px 0; }
 
 .section-warm { background: var(--bg-warm); }
+
+.channels-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 40px;
+}
+.channels-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.channels-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+.channels-icon {
+  width: 52px; height: 52px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent-light);
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+.channels-card h3 {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.channels-card p {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+.channels-card code {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  background: var(--accent-light);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--accent);
+}
+.channels-link {
+  text-align: center;
+}
+.btn-outline {
+  display: inline-block;
+  padding: 12px 28px;
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.btn-outline:hover {
+  background: var(--accent);
+  color: #fff;
+  text-decoration: none;
+}
+
+@media (max-width: 768px) {
+  .channels-grid { grid-template-columns: 1fr; }
+}
 
 .section-header {
   text-align: center;
@@ -756,11 +843,12 @@ section { padding: 96px 0; }
   <div class="container nav-inner">
     <a href="#" class="nav-logo">Claude<span>Claw</span></a>
     <ul class="nav-links">
+      <li><a href="#channels" data-i18n="nav.channels">Channels</a></li>
       <li><a href="#features" data-i18n="nav.features">Features</a></li>
       <li><a href="#security" data-i18n="nav.security">Security</a></li>
       <li><a href="#architecture" data-i18n="nav.architecture">Architecture</a></li>
       <li><a href="#commands" data-i18n="nav.commands">Commands</a></li>
-      <li><a href="https://github.com/maxmartinezc/ClaudeClaw" target="_blank">GitHub</a></li>
+      <li><a href="https://github.com/kalbac/claudeclaw" target="_blank">GitHub</a></li>
       <li><button class="lang-toggle" id="langToggle" aria-label="Toggle language">EN / RU</button></li>
     </ul>
     <button class="hamburger" id="hamburgerBtn" aria-label="Menu">
@@ -771,11 +859,12 @@ section { padding: 96px 0; }
 
 <!-- MOBILE MENU -->
 <div class="mobile-menu" id="mobileMenu">
+  <a href="#channels" data-i18n="nav.channels">Channels</a>
   <a href="#features" data-i18n="nav.features">Features</a>
   <a href="#security" data-i18n="nav.security">Security</a>
   <a href="#architecture" data-i18n="nav.architecture">Architecture</a>
   <a href="#commands" data-i18n="nav.commands">Commands</a>
-  <a href="https://github.com/maxmartinezc/ClaudeClaw" target="_blank">GitHub</a>
+  <a href="https://github.com/kalbac/claudeclaw" target="_blank">GitHub</a>
   <button class="lang-toggle" id="langToggleMobile" aria-label="Toggle language">EN / RU</button>
 </div>
 
@@ -808,6 +897,43 @@ section { padding: 96px 0; }
 <span class="info">Scheduler</span> started <span class="dim">(polling every 60s)</span>
 <span class="success">ClaudeClaw is running</span>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- CHANNELS -->
+<section id="channels" class="section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <span class="section-label" data-i18n="channels.label">Built on Official Technology</span>
+      <h2 data-i18n="channels.title">What is Claude Channels?</h2>
+      <p class="section-desc" data-i18n="channels.desc">Claude Channels is an official Anthropic feature that connects Claude Code to messaging platforms. ClaudeClaw is built entirely on top of it — no hacks, no workarounds, no third-party middleware.</p>
+    </div>
+    <div class="channels-grid fade-in">
+      <div class="channels-card">
+        <div class="channels-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3 data-i18n="channels.official.t">Official Anthropic Plugin</h3>
+        <p data-i18n="channels.official.d">Channels is a first-party feature of Claude Code CLI. Your tokens and credentials never leave Anthropic's infrastructure. No third-party code touches your auth.</p>
+      </div>
+      <div class="channels-card">
+        <div class="channels-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        </div>
+        <h3 data-i18n="channels.bridge.t">Telegram Bridge</h3>
+        <p data-i18n="channels.bridge.d">Run <code>claude --channels plugin:telegram</code> and your Claude Code session becomes accessible via Telegram. Voice messages, photos, documents — everything works.</p>
+      </div>
+      <div class="channels-card">
+        <div class="channels-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <h3 data-i18n="channels.fullpower.t">Full Claude Code Power</h3>
+        <p data-i18n="channels.fullpower.d">Not a wrapper. Not an API proxy. Channels runs the real Claude Code CLI with all your MCP servers, skills, file system access, and tools. The phone is just a remote control.</p>
+      </div>
+    </div>
+    <div class="channels-link fade-in">
+      <a href="https://code.claude.com/docs/en/channels" target="_blank" class="btn-outline" data-i18n="channels.docs">Read Official Channels Documentation &rarr;</a>
     </div>
   </div>
 </section>
@@ -1047,9 +1173,9 @@ section { padding: 96px 0; }
 <section class="cta-section">
   <div class="container fade-in">
     <h2 data-i18n="cta.title">Ready to build your assistant?</h2>
-    <div class="cta-code"><span class="prompt">$</span> git clone https://github.com/maxmartinezc/ClaudeClaw.git &amp;&amp; cd ClaudeClaw &amp;&amp; npx tsx scripts/setup.ts</div>
+    <div class="cta-code"><span class="prompt">$</span> git clone https://github.com/kalbac/claudeclaw.git &amp;&amp; cd ClaudeClaw &amp;&amp; npx tsx scripts/setup.ts</div>
     <br>
-    <a href="https://github.com/maxmartinezc/ClaudeClaw" target="_blank" class="btn-primary" data-i18n="cta.github">View on GitHub</a>
+    <a href="https://github.com/kalbac/claudeclaw" target="_blank" class="btn-primary" data-i18n="cta.github">View on GitHub</a>
   </div>
 </section>
 
@@ -1058,7 +1184,7 @@ section { padding: 96px 0; }
   <div class="container footer-inner">
     <span>MIT License</span>
     <span class="footer-sep">|</span>
-    <a href="https://github.com/maxmartinezc/ClaudeClaw" target="_blank">GitHub</a>
+    <a href="https://github.com/kalbac/claudeclaw" target="_blank">GitHub</a>
     <span class="footer-sep">|</span>
     <span data-i18n="footer.credit">Created by a developer from <a href="https://woodev.ru" target="_blank">woodev.ru</a></span>
   </div>
@@ -1068,6 +1194,7 @@ section { padding: 96px 0; }
 // --- i18n ---
 const translations = {
   en: {
+    "nav.channels": "Channels",
     "nav.features": "Features",
     "nav.security": "Security",
     "nav.architecture": "Architecture",
@@ -1077,6 +1204,16 @@ const translations = {
     "hero.subtitle": "ClaudeClaw runs the real Claude Code CLI on your machine, controlled through Telegram. Persistent memory, autonomous tasks, voice messages, and the full power of every MCP tool you have.",
     "hero.cta_primary": "Get Started",
     "hero.cta_secondary": "Learn More",
+    "channels.label": "Built on Official Technology",
+    "channels.title": "What is Claude Channels?",
+    "channels.desc": "Claude Channels is an official Anthropic feature that connects Claude Code to messaging platforms. ClaudeClaw is built entirely on top of it — no hacks, no workarounds, no third-party middleware.",
+    "channels.official.t": "Official Anthropic Plugin",
+    "channels.official.d": "Channels is a first-party feature of Claude Code CLI. Your tokens and credentials never leave Anthropic's infrastructure. No third-party code touches your auth.",
+    "channels.bridge.t": "Telegram Bridge",
+    "channels.bridge.d": "Run <code>claude --channels plugin:telegram</code> and your Claude Code session becomes accessible via Telegram. Voice messages, photos, documents — everything works.",
+    "channels.fullpower.t": "Full Claude Code Power",
+    "channels.fullpower.d": "Not a wrapper. Not an API proxy. Channels runs the real Claude Code CLI with all your MCP servers, skills, file system access, and tools. The phone is just a remote control.",
+    "channels.docs": "Read Official Channels Documentation &rarr;",
     "why.title": "Why ClaudeClaw?",
     "why.subtitle": "Not another chatbot wrapper. A real CLI agent under your full control.",
     "why.card1_title": "Not a Wrapper",
@@ -1142,6 +1279,7 @@ const translations = {
     "footer.credit": "Created by a developer from <a href=\"https://woodev.ru\" target=\"_blank\">woodev.ru</a>"
   },
   ru: {
+    "nav.channels": "Channels",
     "nav.features": "\u0424\u0443\u043d\u043a\u0446\u0438\u0438",
     "nav.security": "\u0411\u0435\u0437\u043e\u043f\u0430\u0441\u043d\u043e\u0441\u0442\u044c",
     "nav.architecture": "\u0410\u0440\u0445\u0438\u0442\u0435\u043a\u0442\u0443\u0440\u0430",
@@ -1151,6 +1289,16 @@ const translations = {
     "hero.subtitle": "ClaudeClaw \u0437\u0430\u043f\u0443\u0441\u043a\u0430\u0435\u0442 \u043d\u0430\u0441\u0442\u043e\u044f\u0449\u0438\u0439 Claude Code CLI \u043d\u0430 \u0432\u0430\u0448\u0435\u0439 \u043c\u0430\u0448\u0438\u043d\u0435, \u0443\u043f\u0440\u0430\u0432\u043b\u044f\u0435\u043c\u044b\u0439 \u0447\u0435\u0440\u0435\u0437 Telegram. \u041f\u043e\u0441\u0442\u043e\u044f\u043d\u043d\u0430\u044f \u043f\u0430\u043c\u044f\u0442\u044c, \u0430\u0432\u0442\u043e\u043d\u043e\u043c\u043d\u044b\u0435 \u0437\u0430\u0434\u0430\u0447\u0438, \u0433\u043e\u043b\u043e\u0441\u043e\u0432\u044b\u0435 \u0441\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u044f \u0438 \u0432\u0441\u044f \u043c\u043e\u0449\u044c \u043a\u0430\u0436\u0434\u043e\u0433\u043e MCP-\u0438\u043d\u0441\u0442\u0440\u0443\u043c\u0435\u043d\u0442\u0430.",
     "hero.cta_primary": "\u041d\u0430\u0447\u0430\u0442\u044c",
     "hero.cta_secondary": "\u041f\u043e\u0434\u0440\u043e\u0431\u043d\u0435\u0435",
+    "channels.label": "\u041d\u0430 \u043e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u043e\u0439 \u0442\u0435\u0445\u043d\u043e\u043b\u043e\u0433\u0438\u0438",
+    "channels.title": "\u0427\u0442\u043e \u0442\u0430\u043a\u043e\u0435 Claude Channels?",
+    "channels.desc": "Claude Channels \u2014 \u043e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u0430\u044f \u0444\u0443\u043d\u043a\u0446\u0438\u044f Anthropic, \u043a\u043e\u0442\u043e\u0440\u0430\u044f \u0441\u043e\u0435\u0434\u0438\u043d\u044f\u0435\u0442 Claude Code \u0441 \u043c\u0435\u0441\u0441\u0435\u043d\u0434\u0436\u0435\u0440\u0430\u043c\u0438. ClaudeClaw \u043f\u043e\u043b\u043d\u043e\u0441\u0442\u044c\u044e \u043f\u043e\u0441\u0442\u0440\u043e\u0435\u043d \u043d\u0430 \u043d\u0451\u043c \u2014 \u043d\u0438\u043a\u0430\u043a\u0438\u0445 \u0445\u0430\u043a\u043e\u0432, \u043e\u0431\u0445\u043e\u0434\u043e\u0432 \u0438\u043b\u0438 \u0441\u0442\u043e\u0440\u043e\u043d\u043d\u0435\u0433\u043e \u043a\u043e\u0434\u0430.",
+    "channels.official.t": "\u041e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u044b\u0439 \u043f\u043b\u0430\u0433\u0438\u043d Anthropic",
+    "channels.official.d": "Channels \u2014 \u0432\u0441\u0442\u0440\u043e\u0435\u043d\u043d\u0430\u044f \u0444\u0443\u043d\u043a\u0446\u0438\u044f Claude Code CLI. \u0422\u043e\u043a\u0435\u043d\u044b \u0438 \u0443\u0447\u0451\u0442\u043d\u044b\u0435 \u0434\u0430\u043d\u043d\u044b\u0435 \u043d\u0438\u043a\u043e\u0433\u0434\u0430 \u043d\u0435 \u043f\u043e\u043a\u0438\u0434\u0430\u044e\u0442 \u0438\u043d\u0444\u0440\u0430\u0441\u0442\u0440\u0443\u043a\u0442\u0443\u0440\u0443 Anthropic. \u041d\u0438\u043a\u0430\u043a\u043e\u0439 \u0441\u0442\u043e\u0440\u043e\u043d\u043d\u0438\u0439 \u043a\u043e\u0434 \u043d\u0435 \u043a\u0430\u0441\u0430\u0435\u0442\u0441\u044f \u0432\u0430\u0448\u0435\u0439 \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u0430\u0446\u0438\u0438.",
+    "channels.bridge.t": "Telegram-\u043c\u043e\u0441\u0442",
+    "channels.bridge.d": "\u0417\u0430\u043f\u0443\u0441\u0442\u0438\u0442\u0435 <code>claude --channels plugin:telegram</code> \u0438 \u0432\u0430\u0448\u0430 \u0441\u0435\u0441\u0441\u0438\u044f Claude Code \u0441\u0442\u0430\u043d\u0435\u0442 \u0434\u043e\u0441\u0442\u0443\u043f\u043d\u0430 \u0447\u0435\u0440\u0435\u0437 Telegram. \u0413\u043e\u043b\u043e\u0441\u043e\u0432\u044b\u0435, \u0444\u043e\u0442\u043e, \u0434\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u044b \u2014 \u0432\u0441\u0451 \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442.",
+    "channels.fullpower.t": "\u041f\u043e\u043b\u043d\u0430\u044f \u043c\u043e\u0449\u044c Claude Code",
+    "channels.fullpower.d": "\u041d\u0435 \u043e\u0431\u0451\u0440\u0442\u043a\u0430. \u041d\u0435 API-\u043f\u0440\u043e\u043a\u0441\u0438. Channels \u0437\u0430\u043f\u0443\u0441\u043a\u0430\u0435\u0442 \u043d\u0430\u0441\u0442\u043e\u044f\u0449\u0438\u0439 Claude Code CLI \u0441\u043e \u0432\u0441\u0435\u043c\u0438 MCP-\u0441\u0435\u0440\u0432\u0435\u0440\u0430\u043c\u0438, \u043d\u0430\u0432\u044b\u043a\u0430\u043c\u0438, \u0434\u043e\u0441\u0442\u0443\u043f\u043e\u043c \u043a \u0444\u0430\u0439\u043b\u0430\u043c. \u0422\u0435\u043b\u0435\u0444\u043e\u043d \u2014 \u043f\u0440\u043e\u0441\u0442\u043e \u043f\u0443\u043b\u044c\u0442 \u0443\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u044f.",
+    "channels.docs": "\u0427\u0438\u0442\u0430\u0442\u044c \u043e\u0444\u0438\u0446\u0438\u0430\u043b\u044c\u043d\u0443\u044e \u0434\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u0430\u0446\u0438\u044e Channels &rarr;",
     "why.title": "\u041f\u043e\u0447\u0435\u043c\u0443 ClaudeClaw?",
     "why.subtitle": "\u041d\u0435 \u043e\u0447\u0435\u0440\u0435\u0434\u043d\u0430\u044f \u043e\u0431\u0451\u0440\u0442\u043a\u0430 \u043d\u0430\u0434 \u0447\u0430\u0442-\u0431\u043e\u0442\u043e\u043c. \u041d\u0430\u0441\u0442\u043e\u044f\u0449\u0438\u0439 CLI-\u0430\u0433\u0435\u043d\u0442 \u043f\u043e\u0434 \u0432\u0430\u0448\u0438\u043c \u043f\u043e\u043b\u043d\u044b\u043c \u043a\u043e\u043d\u0442\u0440\u043e\u043b\u0435\u043c.",
     "why.card1_title": "\u041d\u0435 \u043e\u0431\u0451\u0440\u0442\u043a\u0430",
