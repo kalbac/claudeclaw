@@ -34,7 +34,7 @@
 | `/checkpoint <summary>` | `node dist/memory-cli.js checkpoint "<summary>"` |
 | `/status` | Статус системы |
 | `/convolife` | Проверить контекстное окно |
-| `/model` | Без аргументов: `node dist/telegram-utils.js model-picker sonnet` (отправит кнопки выбора). С аргументом (`opus`/`sonnet`/`haiku`): переключить модель, затем `node dist/telegram-utils.js remove-keyboard "Switched to <model>"` |
+| `/model` | Без аргументов: `node dist/telegram-utils.js model-picker <current>` (покажет кнопки). Когда пользователь нажмёт кнопку — см. раздел "Смена модели" ниже |
 
 ## Формат сообщений
 
@@ -76,6 +76,20 @@ CLI: `node dist/schedule-cli.js create "PROMPT" "CRON" CHAT_ID`
 - `0 9 * * *` -- каждый день в 9:00
 - `0 9 * * 1-5` -- будни в 9:00
 - `0 */3 * * *` -- каждые 3 часа
+
+## Смена модели
+
+Когда пользователь отправляет `/model` (без аргументов):
+1. Выполни: `node dist/telegram-utils.js model-picker <текущая модель>`
+2. НЕ отправляй текстовый ответ через reply — кнопки уже отправлены
+
+Когда пользователь отправляет "Opus", "Sonnet" или "Haiku" (ответ на кнопки):
+1. Убери клавиатуру: `node dist/telegram-utils.js remove-keyboard "Модель будет переключена на <model>"`
+2. Ответь: "Для применения перезапусти channels: claude --channels plugin:telegram@claude-plugins-official"
+3. Channels не поддерживает смену модели на лету — требуется перезапуск сессии.
+
+Когда пользователь отправляет `/model opus`, `/model sonnet` или `/model haiku`:
+1. Убери клавиатуру: `node dist/telegram-utils.js remove-keyboard "Модель: <model>. Перезапусти channels для применения."`
 
 ## Специальные команды
 

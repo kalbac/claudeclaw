@@ -92,10 +92,9 @@ switch (command) {
   case 'model-picker': {
     const current = args[0] ?? 'sonnet'
     await sendWithKeyboard(
-      `Current model: ${current}\nSelect a model:`,
+      `Current model: ${current}\nSelect:`,
       [
-        ['/model opus', '/model sonnet'],
-        ['/model haiku'],
+        ['Opus', 'Sonnet', 'Haiku'],
       ]
     )
     break
