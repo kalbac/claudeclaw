@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.env
+store/
+workspace/
+*.log
+*.pid
+
+# Personal files (not part of the reusable project)
+USER.md
+AGENT.md
+CLAUDE_template.md
+ClaudeClaw_prompt.md
+env.example
+.claude/settings.local.json
