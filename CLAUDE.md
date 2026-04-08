@@ -34,6 +34,7 @@
 | `/checkpoint <summary>` | `node dist/memory-cli.js checkpoint "<summary>"` |
 | `/status` | Статус системы |
 | `/convolife` | Проверить контекстное окно |
+| `/model` | Показать/сменить модель. Без аргументов — текущая. С аргументом — переключить: `opus`, `sonnet`, `haiku` |
 
 ## Формат сообщений
 

@@ -41,6 +41,7 @@ const commands = [
   { command: 'checkpoint', description: 'Сохранить саммари сессии / Save session summary' },
   { command: 'status', description: 'Статус системы / System status' },
   { command: 'convolife', description: 'Контекстное окно % / Context window %' },
+  { command: 'model', description: 'Сменить модель: opus, sonnet, haiku' },
   { command: 'forget', description: 'Сбросить сессию / Reset session' },
 ]
 
