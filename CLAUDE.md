@@ -34,7 +34,7 @@
 | `/checkpoint <summary>` | `node dist/memory-cli.js checkpoint "<summary>"` |
 | `/status` | Статус системы |
 | `/convolife` | Проверить контекстное окно |
-| `/model` | Показать/сменить модель. Без аргументов — текущая. С аргументом — переключить: `opus`, `sonnet`, `haiku` |
+| `/model` | Без аргументов: `node dist/telegram-utils.js model-picker sonnet` (отправит кнопки выбора). С аргументом (`opus`/`sonnet`/`haiku`): переключить модель, затем `node dist/telegram-utils.js remove-keyboard "Switched to <model>"` |
 
 ## Формат сообщений
 
