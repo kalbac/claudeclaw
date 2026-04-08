@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = resolve(fileURLToPath(import.meta.url), '..')
 const ROOT = resolve(__dirname, '..')
+const home = process.env.HOME ?? process.env.USERPROFILE ?? ''
 
 // Resolve bot token (same logic as config.ts)
 function getToken(): string {
@@ -22,7 +23,6 @@ function getToken(): string {
   } catch {}
 
   // Fallback to channels config
-  const home = process.env.HOME ?? process.env.USERPROFILE ?? ''
   try {
     const env = readFileSync(resolve(home, '.claude', 'channels', 'telegram', '.env'), 'utf-8')
     const match = env.match(/^TELEGRAM_BOT_TOKEN=(.+)$/m)
@@ -51,27 +51,45 @@ async function main() {
     process.exit(1)
   }
 
-  // Must use same scope as channels plugin (all_private_chats) to override
   const url = `https://api.telegram.org/bot${token}/setMyCommands`
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      commands,
-      scope: { type: 'all_private_chats' },
-    }),
-  })
 
-  const data = await res.json() as any
+  // Resolve chat ID for chat-specific scope (highest priority, survives plugin restarts)
+  let chatId = ''
+  try {
+    const envContent = readFileSync(resolve(ROOT, '.env'), 'utf-8')
+    chatId = envContent.match(/^ALLOWED_CHAT_ID=(.+)$/m)?.[1]?.trim() ?? ''
+  } catch {}
+  if (!chatId) {
+    try {
+      const accessPath = resolve(home, '.claude', 'channels', 'telegram', 'access.json')
+      const access = JSON.parse(readFileSync(accessPath, 'utf-8'))
+      chatId = access.allowFrom?.[0] ?? ''
+    } catch {}
+  }
 
-  if (data.ok) {
-    console.log(`✓ ${commands.length} commands registered:`)
+  // Set at all three scope levels so commands always show
+  const scopes: Array<{ type: string; chat_id?: string }> = [
+    { type: 'default' },
+    { type: 'all_private_chats' },
+  ]
+  if (chatId) scopes.push({ type: 'chat', chat_id: chatId })
+
+  let ok = true
+  for (const scope of scopes) {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ commands, scope }),
+    })
+    const data = await res.json() as any
+    if (!data.ok) { ok = false; console.error(`✗ Failed for scope ${scope.type}:`, data.description) }
+  }
+
+  if (ok) {
+    console.log(`✓ ${commands.length} commands registered (${scopes.length} scopes):`)
     for (const cmd of commands) {
       console.log(`  /${cmd.command} — ${cmd.description}`)
     }
-  } else {
-    console.error('✗ Failed:', data.description)
-    process.exit(1)
   }
 }
 
